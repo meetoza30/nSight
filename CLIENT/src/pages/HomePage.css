@@ -1,0 +1,158 @@
+.home-page {
+  width: 100%;
+  max-width: 920px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  padding: 20px;
+}
+
+.home-headline {
+  text-align: center;
+}
+
+.home-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin: 0 0 10px 0;
+}
+
+.home-sub {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* -------- Feature Cards -------- */
+.feature-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+}
+
+@media (max-width: 700px) {
+  .feature-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feature-card {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: inherit;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card--accent::before {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.04), rgba(139, 92, 246, 0.08));
+}
+
+.feature-card--accent:hover::before {
+  opacity: 1;
+}
+
+/* Icon wrapper */
+.feature-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.feature-icon-blue {
+  background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+  color: #2563EB;
+}
+
+.feature-icon-purple {
+  background: linear-gradient(135deg, #F5F3FF, #EDE9FE);
+  color: #7C3AED;
+}
+
+/* Content */
+.feature-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feature-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin: 0;
+}
+
+.feature-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Tags */
+.feature-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #EFF6FF;
+  color: #2563EB;
+  letter-spacing: 0.3px;
+}
+
+.tag--purple {
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+
+/* CTA row */
+.feature-cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2563EB;
+  transition: gap 0.2s ease;
+}
+
+.feature-cta--purple {
+  color: #7C3AED;
+}
+
+.feature-card:hover .feature-cta {
+  gap: 10px;
+}

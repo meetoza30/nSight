@@ -1,0 +1,102 @@
+.download-page {
+  width: 100%;
+  max-width: 600px;
+  padding: 56px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+/* .icon{
+  width: 20%;
+  height: 20%;
+} */
+.success-icon-wrapper {
+  width: 90px;
+  height: 90px;
+  margin-bottom: 24px;
+}
+
+.animated-checkmark {
+  width: 100%;
+  height: 100%;
+}
+
+.checkmark-circle {
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  animation: drawCircle 0.8s ease forwards;
+  opacity: 0.2;
+}
+
+.checkmark-check {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawCheck 0.6s ease 0.6s forwards;
+}
+
+@keyframes drawCircle {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes drawCheck {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.download-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin: 0 0 12px 0;
+}
+
+.download-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.filename-chip {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(82, 82, 82, 0.6);
+  color: var(--primary-navy);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  /* gap: 8px; */
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.download-actions {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+.download-actions button {
+  min-width: 220px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .download-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .download-actions button {
+    width: 100%;
+    max-width: 280px;
+  }
+}

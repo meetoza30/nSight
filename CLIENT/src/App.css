@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-color: #F8FAFC;
+  --primary-navy: #0F172A;
+  --accent-blue: #2563EB;
+  --text-secondary: #334155;
+  --placeholder: #94A3B8;
+  
+  --font-main: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-color);
+  color: var(--primary-navy);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.app {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Watermark */
+.watermark-bg {
+  position: fixed;
+  bottom: -5vw;
+  left: 25vw;
+  width: 50vw;
+  min-width: 600px;
+  opacity: 0.20;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glassmorphism Class */
+.glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Common Header Styles */
+.app-header {
+  padding: 24px 40px;
+  z-index: 100;
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(248, 250, 252, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.app-logo-small {
+  height: 56px;
+  width: auto;
+  border-radius: 6px;
+}
+
+.app-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.app-subtitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.main-container {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1;
+}
+
+/* Generic Button */
+.primary-btn {
+  background-color: var(--primary-navy);
+  color: #fff;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.primary-btn:hover {
+  background-color: var(--accent-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.outline-btn {
+  background-color: transparent;
+  color: var(--primary-navy);
+  border: 1px solid var(--primary-navy);
+  padding: 13px 27px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-main);
+}
+
+.outline-btn:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+/* Inputs */
+.form-input-modern {
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 10px 0;
+  font-size: 15px;
+  color: var(--primary-navy);
+  font-family: var(--font-main);
+  transition: border-color 0.3s ease;
+  border-radius: 0;
+}
+
+.form-input-modern:focus {
+  outline: none;
+  border-bottom: 2px solid var(--accent-blue);
+  padding-bottom: 9px;
+}
+
+.form-input-modern::placeholder {
+  color: var(--placeholder);
+}
+
+.form-input-modern-alt {
+  width: 100%;
+  background-color: #F1F5F9;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  padding: 12px 16px;
+  font-size: 15px;
+  color: var(--primary-navy);
+  font-family: var(--font-main);
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.form-input-modern-alt:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-bottom: 2px solid var(--accent-blue);
+}
+.form-input-modern-alt::placeholder {
+  color: var(--placeholder);
+}

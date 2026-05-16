@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+.venv/
+static
+.env
+
+# VS Code (optional but recommended)
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+
+# Logs
+*.log

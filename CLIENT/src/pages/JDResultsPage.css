@@ -1,0 +1,270 @@
+.jd-results-page {
+  width: 100%;
+  max-width: 1350px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px 40px;
+}
+
+/* ---- Top Bar ---- */
+.jdr-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.jdr-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.jdr-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+  color: #16A34A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.jdr-main-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin: 0 0 10px 0;
+  line-height: 1.2;
+}
+
+.jdr-main-sub {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.jdr-topbar-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.jdr-download-btn {
+  background: linear-gradient(135deg, #0F172A, #1E293B);
+  font-size: 14px;
+  padding: 12px 20px;
+  white-space: nowrap;
+}
+
+.jdr-download-btn:hover {
+  background: linear-gradient(135deg, #1E293B, #334155);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25);
+}
+
+.jdr-new-btn {
+  font-size: 14px;
+  padding: 11px 18px;
+}
+
+/* ---- Grade Strip ---- */
+.jdr-grade-strip {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.jdr-grade-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 50px;
+  border: 1px solid;
+  background: #F8FAFC;
+  transition: transform 0.2s;
+}
+
+.jdr-grade-chip:hover { transform: translateY(-1px); }
+
+.jdr-grade-count {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.jdr-grade-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ---- Candidate Cards ---- */
+.jdr-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .jdr-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.candidate-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 24px;
+  border-left: 4px solid var(--card-border);
+  transition: all 0.3s ease;
+  animation: cardSlideIn 0.4s ease both;
+}
+
+@keyframes cardSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.candidate-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Score columns */
+.card-score-col {
+  flex-shrink: 0;
+}
+
+.score-ring-wrap {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-ring-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.score-ring-pct {
+  font-size: 18px;
+}
+
+.score-ring-sym {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* Info column */
+.card-info-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-top-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.candidate-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin: 0;
+}
+
+.grade-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 50px;
+  border: 1px solid;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.candidate-filename {
+  font-size: 12px;
+  color: var(--placeholder);
+  margin: 0;
+  font-family: monospace;
+}
+
+.candidate-summary {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ---- Bottom CTA ---- */
+.jdr-bottom-cta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 28px;
+  flex-wrap: wrap;
+}
+
+.jdr-bottom-cta-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.jdr-bottom-cta-text {
+  flex: 1;
+  min-width: 200px;
+}
+
+.jdr-bottom-cta-text strong {
+  display: block;
+  font-size: 15px;
+  color: var(--primary-navy);
+  margin-bottom: 4px;
+}
+
+.jdr-bottom-cta-text p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ---- Empty state ---- */
+.jdr-empty {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-secondary);
+}

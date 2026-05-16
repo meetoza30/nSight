@@ -1,0 +1,141 @@
+.processing-page {
+  width: 100%;
+  max-width: 600px;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.res-scanner-icon {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.res-scan-svg {
+  color: #2563EB;
+  animation: jdScanPulse 2s ease-in-out infinite;
+}
+
+.res-scan-ring {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 2px solid #2563EB;
+  opacity: 0;
+  animation: jdRingExpand 2s ease-out infinite;
+}
+
+.processing-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.processing-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: 48px;
+}
+
+.skeleton-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.skeleton-line, .skeleton-box {
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-title {
+  height: 24px;
+  width: 40%;
+}
+
+.skeleton-short {
+  height: 16px;
+  width: 25%;
+}
+
+.skeleton-box {
+  height: 80px;
+  width: 100%;
+  border-radius: 12px;
+  margin: 8px 0;
+}
+
+.skeleton-full {
+  height: 16px;
+  width: 100%;
+}
+
+.skeleton-medium {
+  height: 16px;
+  width: 70%;
+}
+
+.sleek-progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #E2E8F0;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.sleek-progress-fill {
+  height: 100%;
+  background-color: var(--accent-blue);
+  border-radius: 8px;
+  transition: width 0.4s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.shimmer-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: bar-shimmer 2s infinite;
+}
+
+@keyframes bar-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
