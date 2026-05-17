@@ -73,10 +73,15 @@ def extract_jd_with_llm(jd_text: str) -> dict | None:
                     "temperature": 0.1
                 })
             )
-
+            data = response.json()
+            print("jd extraction")
+            print("Prompt Tokens:", data["usage"]["prompt_tokens"])
+            print("Completion Tokens:", data["usage"]["completion_tokens"])
+            print("Total Tokens:", data["usage"]["total_tokens"])
+            
             response.raise_for_status()
             result_text = response.json()['choices'][0]['message']['content'].strip()
-
+            # print("extracted jd (json) : ", result_text)
             # Extract JSON safely
             start_idx = result_text.find('{')
             end_idx = result_text.rfind('}')
@@ -85,6 +90,7 @@ def extract_jd_with_llm(jd_text: str) -> dict | None:
                 clean_json = result_text[start_idx:end_idx + 1]
                 try:
                     parsed = json.loads(clean_json)
+                    print("parsed",parsed)
 
                     # Basic validation
                     if not isinstance(parsed, dict) or "job_title" not in parsed:

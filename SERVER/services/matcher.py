@@ -199,28 +199,28 @@ def _score_role_alignment_with_llm(resume: dict, jd: dict) -> dict:
     }
 
     prompt = f"""
-You are evaluating how well a candidate's work experience aligns with a job description.
+        You are evaluating how well a candidate's work experience aligns with a job description.
 
-CANDIDATE EXPERIENCE SUMMARY:
-{json.dumps(candidate_summary, indent=2)}
+        CANDIDATE EXPERIENCE SUMMARY:
+        {json.dumps(candidate_summary, indent=2)}
 
-JOB DESCRIPTION REQUIREMENTS:
-{json.dumps(jd_summary, indent=2)}
+        JOB DESCRIPTION REQUIREMENTS:
+        {json.dumps(jd_summary, indent=2)}
 
-Score the alignment from 0 to 100 where:
-- 90-100: Near-perfect role match, responsibilities almost identical
-- 70-89: Strong overlap, candidate has done similar work
-- 50-69: Partial overlap, some relevant experience
-- 30-49: Limited overlap, different domain or responsibilities
-- 0-29: Very little alignment
+        Score the alignment from 0 to 100 where:
+        - 90-100: Near-perfect role match, responsibilities almost identical
+        - 70-89: Strong overlap, candidate has done similar work
+        - 50-69: Partial overlap, some relevant experience
+        - 30-49: Limited overlap, different domain or responsibilities
+        - 0-29: Very little alignment
 
-Respond ONLY with a JSON object, no markdown:
-{{
-  "score": <number 0-100>,
-  "detail": "<one sentence explanation>"
-}}
-"""
-
+        Respond ONLY with a JSON object, no markdown:
+        {{
+        "score": <number 0-100>,
+        "detail": "<one sentence explanation>"
+        }}
+        """
+    print("llm prompt for role alignemnt : ", prompt)
     max_retries = 2
     for attempt in range(max_retries):
         try:
@@ -232,11 +232,18 @@ Respond ONLY with a JSON object, no markdown:
                 },
                 data=json.dumps({
                     "model": "google/gemma-3-12b-it",
+                    
                     "response_format": {"type": "json_object"},
                     "messages": [{"role": "user", "content": prompt}],
                     "temperature": 0.1
                 })
             )
+            data = response.json()
+            print("role alignment")
+            print("Prompt Tokens:", data["usage"]["prompt_tokens"])
+            print("Completion Tokens:", data["usage"]["completion_tokens"])
+            print("Total Tokens:", data["usage"]["total_tokens"])
+            # print(response.json())
             response.raise_for_status()
             raw = response.json()['choices'][0]['message']['content'].strip()
             start = raw.find('{')
@@ -260,7 +267,6 @@ Respond ONLY with a JSON object, no markdown:
     fallback_score = min(80, hits * 20 + 30)
     return {"score": fallback_score, "detail": "Scored via title keyword match (LLM unavailable)"}
 
-
 def _generate_match_summary_with_llm(
     resume: dict,
     jd: dict,
@@ -277,22 +283,22 @@ def _generate_match_summary_with_llm(
     missing_skills = breakdown.get("skills", {}).get("missing_required", [])
 
     prompt = f"""
-Write a 2-3 sentence professional recruiter summary for this resume-JD match.
+        Write a 2-3 sentence professional recruiter summary for this resume-JD match.
 
-Candidate: {candidate_name}
-Role: {jd_title}
-Overall match score: {overall_score}/100
-Skills score: {breakdown['skills']['score']}/100
-Experience score: {breakdown['experience']['score']}/100
-Role alignment score: {breakdown['role_alignment']['score']}/100
-Education score: {breakdown['education']['score']}/100
-Missing required skills: {', '.join(missing_skills[:5]) if missing_skills else 'None'}
+        Candidate: {candidate_name}
+        Role: {jd_title}
+        Overall match score: {overall_score}/100
+        Skills score: {breakdown['skills']['score']}/100
+        Experience score: {breakdown['experience']['score']}/100
+        Role alignment score: {breakdown['role_alignment']['score']}/100
+        Education score: {breakdown['education']['score']}/100
+        Missing required skills: {', '.join(missing_skills[:5]) if missing_skills else 'None'}
 
-Be concise, factual, and professional. Do not use bullet points. 
-Start with the candidate's name and their fit level (Strong/Good/Moderate/Weak).
-Respond with ONLY the summary text, no JSON, no markdown.
-"""
-
+        Be concise, factual, and professional. Do not use bullet points. 
+        Start with the candidate's name and their fit level (Strong/Good/Moderate/Weak).
+        Respond with ONLY the summary text, no JSON, no markdown.
+        """
+    print("llm prompt for summary generation : ", prompt)
     try:
         response = requests.post(
             url="https://openrouter.ai/api/v1/chat/completions",
@@ -307,6 +313,11 @@ Respond with ONLY the summary text, no JSON, no markdown.
                 "max_tokens": 150
             })
         )
+        data = response.json()
+        print("summary generation")
+        print("Prompt Tokens:", data["usage"]["prompt_tokens"])
+        print("Completion Tokens:", data["usage"]["completion_tokens"])
+        print("Total Tokens:", data["usage"]["total_tokens"])
         response.raise_for_status()
         return response.json()['choices'][0]['message']['content'].strip()
     except Exception as e:
@@ -421,7 +432,7 @@ def match_resume_to_jd(resume: dict, jd: dict) -> dict:
         "weights_used": WEIGHTS,
     }
 
-
+# locally run
 if __name__ == "__main__":
     import json
     from resume_extraction import extract_resume_with_llm, extract_text_preserving_layout

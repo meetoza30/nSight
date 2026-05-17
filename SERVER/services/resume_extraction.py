@@ -229,7 +229,11 @@ def extract_resume_json(resume_text):
                     "temperature": 0.1
                 })
             )
-            
+            data = response.json()
+            print("resume extraction")
+            print("Prompt Tokens:", data["usage"]["prompt_tokens"])
+            print("Completion Tokens:", data["usage"]["completion_tokens"])
+            print("Total Tokens:", data["usage"]["total_tokens"])
             response.raise_for_status()
             result_text = response.json()['choices'][0]['message']['content'].strip()
             

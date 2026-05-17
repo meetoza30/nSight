@@ -131,8 +131,7 @@ async def match_bulk_resumes(
     JD input (provide exactly one):
       - jd_file: The JD as a PDF file upload
       - jd_text: The JD as a plain-text form field
-
-    resume_files: One or more candidate resume PDFs.
+      - resume_files: One or more candidate resume PDFs.
 
     Response:
       - results[]: per-candidate { filename, overall_score, grade, summary }
@@ -221,6 +220,7 @@ async def match_bulk_resumes(
         report_download_url = None
         report_filename = "match_report.pdf"
         report_path = os.path.join(STATIC_DIR, report_filename)
+        # print("internal jd match results : ", internal_results)
         try:
             generate_match_report_pdf(
                 results=internal_results,

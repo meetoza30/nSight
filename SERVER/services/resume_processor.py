@@ -12,6 +12,7 @@ def process_resume_file(file_path: str) -> dict:
         dict: Extracted resume data
     """
     full_text = extract_text_preserving_layout(file_path)
+    # print("full_text",full_text)
     
     if not full_text:
         raise HTTPException(status_code=400, detail="Empty or unreadable PDF")
