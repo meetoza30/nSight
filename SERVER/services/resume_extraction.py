@@ -63,7 +63,7 @@ def extract_text_preserving_layout(pdf_path):
 
 # 2. LLM EXTRACTION VIA OPENROUTER
 
-def extract_resume_json(resume_text):
+def extract_resume_json(resume_text, model="deepseek/deepseek-v4-flash"):
     """Sends the resume text to OpenRouter and returns a parsed JSON dictionary."""
     
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -143,7 +143,7 @@ def extract_resume_json(resume_text):
         "7+ years"), use that number as total_experience_years.
     2. Otherwise, find the EARLIEST start date among all experience entries, compute the
         difference to today's date (treat "Present" as today), and round to 1 decimal place.
-    3. Count only professional work experience (full-time, part-time, internship).
+    3. Count only professional work experience (full-time, part-time, internship, project intern).
         Do NOT count education years or personal projects.
 
     RULE 7 — EXPERIENCE DESCRIPTION
@@ -220,7 +220,7 @@ def extract_resume_json(resume_text):
                     "Content-Type": "application/json"
                 },
                 data=json.dumps({
-                    "model": "google/gemma-3-12b-it", 
+                    "model": model, 
                     "response_format": {"type": "json_object"},
                     "messages": [
                         {"role": "system", "content": system_prompt},
@@ -236,6 +236,7 @@ def extract_resume_json(resume_text):
             print("Total Tokens:", data["usage"]["total_tokens"])
             response.raise_for_status()
             result_text = response.json()['choices'][0]['message']['content'].strip()
+            print(result_text)
             
             # JSON Catcher
             start_idx = result_text.find('{')

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ProcessingPage.css';
 import { API_BASE } from '../utils/api';
@@ -7,7 +7,12 @@ function ProcessingPage({ file, onExtractComplete }) {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
 
+  const hasUploaded = useRef(false);
+
   useEffect(() => {
+    if (hasUploaded.current) return;
+    hasUploaded.current = true;
+
     const uploadResume = async () => {
       try {
         const formData = new FormData();

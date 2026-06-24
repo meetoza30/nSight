@@ -1,0 +1,192 @@
+Model Comparison for: D:\nSight\SERVER\my resume.pdf
+============================================================
+
+MODEL: mistralai/mistral-nemo
+------------------------------------------------------------
+{
+    "Name": "Akshay Kumar",
+    "Education": [
+        {
+            "college": "National Institute of Technology, Patna",
+            "degree": "B.Tech in CSE",
+            "graduation_year": "2026",
+            "grade": "8.70"
+        },
+        {
+            "college": "College of Commerce, Arts and Science",
+            "degree": "Senior Secondary (Class XII)",
+            "graduation_year": "2021",
+            "grade": "84%"
+        },
+        {
+            "college": "School of Science and Technology",
+            "degree": "Secondary (Class X)",
+            "graduation_year": "2019",
+            "grade": "92%"
+        }
+    ],
+    "Skills": {
+        "Languages": [
+            "JavaScript",
+            "Python",
+            "Java"
+        ],
+        "Web Technologies": [
+            "React.js",
+            "Node.js",
+            "Express.js",
+            "Redux",
+            "Tailwind CSS",
+            "RESTful APIs"
+        ],
+        "Tools": [
+            "Git",
+            "GitHub",
+            "Postman",
+            "Linux",
+            "Codex",
+            "VS Code"
+        ],
+        "Technologies": [
+            "MongoDB",
+            "MySQL",
+            "OpenAI API",
+            "Natural Language Processing (NLP)"
+        ],
+        "Operating System": [
+            "Object-Oriented Programming (OOP)",
+            "Database Management System (DBMS)",
+            "Operating Systems (OS)",
+            "Computer Network"
+        ]
+    },
+    "Achievements": [
+        "Solved 1600+ algorithmic problems across LeetCode, GeeksforGeeks, CodeChef and Codeforces.",
+        "LeetCode: Knight badge, 1200+ problems solved, Max Rating 1880.",
+        "CodeChef: 3 (Max Rating 1616).",
+        "GeeksforGeeks: 3, Ranked 214 with 400+ problems solved."
+    ],
+    "Experience": {
+        "total_experience_years": 0.0,
+        "experiences": [
+            {
+                "company": "Oracle",
+                "designation": "Project Intern",
+                "duration": "Jan 2026 – Present",
+                "location": "Hyderabad, India",
+                "projects": [
+                    {
+                        "client": "",
+                        "project_name": "",
+                        "project_span": "",
+                        "technologies": [],
+                        "description": [
+                            "Working in the Session Border Controller (SBC) team to improve SIP-based communication reliability and call-routing performance across distributed systems.",
+                            "Developing and optimizing SIP signaling flows, performing root-cause analysis, debugging, and resolving production-grade communication issues.",
+                            "Analyzing traffic patterns and system logs to improve throughput, latency, and overall network performance.",
+                            "Collaborating with engineers on feature development, testing, validation, and deployment of real-time communication workflows."
+                        ],
+                        "role_responsibility": ""
+                    }
+                ]
+            }
+        ]
+    }
+}
+============================================================
+
+MODEL: qwen/qwen3-14b
+------------------------------------------------------------
+{
+    "Name": "Akshay Kumar",
+    "Education": [
+        {
+            "college": "National Institute of Technology, Patna",
+            "degree": "B.Tech in CSE",
+            "graduation_year": "2026",
+            "grade": "8.70"
+        },
+        {
+            "college": "College of Commerce, Arts and Science",
+            "degree": "Senior Secondary (Class XII)",
+            "graduation_year": "2021",
+            "grade": "84%"
+        },
+        {
+            "college": "School of Science and Technology",
+            "degree": "Secondary (Class X)",
+            "graduation_year": "2019",
+            "grade": "92%"
+        }
+    ],
+    "Skills": {
+        "Languages": [
+            "JavaScript",
+            "Python",
+            "Java"
+        ],
+        "Web Technologies": [
+            "React.js",
+            "Node.js",
+            "Express.js",
+            "Redux",
+            "Tailwind CSS",
+            "RESTful APIs"
+        ],
+        "Tools": [
+            "Git",
+            "GitHub",
+            "Postman",
+            "Linux",
+            "Codex",
+            "VS Code"
+        ],
+        "Technologies": [
+            "MongoDB",
+            "MySQL",
+            "OpenAI API",
+            "Natural Language Processing (NLP)",
+            "Data Structures & Algorithms",
+            "Object-Oriented Programming (OOP)",
+            "Database Management System (DBMS)",
+            "Computer Network"
+        ],
+        "Operating System": [
+            "Operating Systems (OS)"
+        ]
+    },
+    "Achievements": [
+        "Solved 1600+ algorithmic problems across LeetCode, GeeksforGeeks, CodeChef and Codeforces.",
+        "LeetCode: Knight badge, 1200+ problems solved, Max Rating 1880.",
+        "CodeChef: 3 (Max Rating 1616).",
+        "GeeksforGeeks: 3, Ranked 214 with 400+ problems solved."
+    ],
+    "Experience": {
+        "total_experience_years": 0.0,
+        "experiences": [
+            {
+                "company": "Oracle",
+                "designation": "Project Intern",
+                "duration": "Jan 2026 – Present",
+                "location": "Hyderabad, India",
+                "projects": [
+                    {
+                        "client": "",
+                        "project_name": "",
+                        "project_span": "",
+                        "technologies": [],
+                        "description": [
+                            "Working in the Session Border Controller (SBC) team to improve SIP-based communication reliability and call-routing performance across distributed systems.",
+                            "Developing and optimizing SIP signaling flows, performing root-cause analysis, debugging, and resolving production-grade communication issues.",
+                            "Analyzing traffic patterns and system logs to improve throughput, latency, and overall network performance.",
+                            "Collaborating with engineers on feature development, testing, validation, and deployment of real-time communication workflows."
+                        ],
+                        "role_responsibility": ""
+                    }
+                ]
+            }
+        ]
+    }
+}
+============================================================
+
