@@ -71,143 +71,26 @@ def extract_resume_json(resume_text, model="deepseek/deepseek-v4-flash"):
     current_year = datetime.date.today().year
     current_month = datetime.date.today().strftime("%B")
     
-    system_prompt = """
-    You are a backend data extraction API. You ONLY output raw, valid JSON. No markdown, no explanation, no preamble.
+    system_prompt = f"""You are a JSON-only data extraction API. Output raw valid JSON — no markdown, no explanation.
 
-    RULE 1 — COPY FROM RESUME ONLY. NEVER INVENT OR INFER.
-    Every single value in the output JSON must come verbatim (or as a direct, minimal paraphrase) from the resume text.
-    - You should completely ignore the resume's 'Projects' or 'Personal Projects' section. 
-    - Do NOT add skills, technologies, tools, or descriptions that are not explicitly written in the resume.
-    - Do NOT infer technologies from project descriptions or bullet points unless the resume explicitly lists them as technologies used.
-    - If a field has no data in the resume, output an empty string "" or empty array [].
+TODAY'S DATE: {current_month} {current_year}
 
-    RULE 2 — EXPERIENCE: CLIENT vs COMPANY vs PROJECT
-    Read this carefully. These are three DIFFERENT things:
-
-    "company"      = The main employer who hired/paid the candidate.
-                    Examples: "Orbit Analytics", "HCL", "IT-Networkz", "nCircle Tech Pvt Ltd"
-
-    "client"       = An external customer, bank, or business that the company served.
-                    Examples: "Barclays", "FinGuard Banking", "ShopTrendz E-Commerce", "ABC Corp"
-                    A client is ONLY present if the resume explicitly names one under that role's work.
-                    If no client is mentioned for a project, set "client": "".
-
-    "project_name" = The specific application, system, or product built.
-                    Examples: "AI Personalization Engine", "Inventory Management System"
-
-    HOW TO IDENTIFY A CLIENT:
-    - The resume may write it as: "Client: Barclays", "Client - ABC Corp", or inline like
-        "Delivered support to Barclays(Banking)" or "ShopTrendz E-Commerce - AI Personalization Engine".
-    - Any named external organization that is NOT the candidate's direct employer is a client.
-    - Do NOT leave the client field blank if a client name is written anywhere under that company's work.
-
-    HOW TO HANDLE MULTIPLE PROJECTS UNDER ONE COMPANY:
-    - If the resume lists several clients or projects under one company/employer, create one entry per project
-        inside the "projects" array of that company.
-    - Do NOT split one company into multiple experience entries just because it has multiple projects.
-
-    RULE 3 — NO PERSONAL PROJECTS IN EXPERIENCE
-    The "Experience" section is strictly ONLY for PROFESSIONAL WORK EXPERIENCE (e.g., full-time, part-time jobs, and internships at a company).
-    - Do NOT include academic projects, personal projects, or side projects under the "Experience" section.
-    - If a section in the resume is titled "Projects", "Academic Projects", or "Personal Projects", you MUST completely ignore all content within that entire section. Do NOT try to extract them.
-    - NEVER reuse or duplicate a company name (e.g., from a real job) just to attach a personal project to it.
-    - Only include a project under a company if the resume explicitly indicates it was built AS PART OF your employment AT that specific company.
-    - Every entry in the "experiences" array MUST be a distinct, real job with a valid "company" name. Do NOT create empty/fake experiences.
-
-    RULE 4 — TECHNOLOGIES IN EXPERIENCE: EXPLICIT ONLY
-    The "technologies" array inside each project MUST be empty [] UNLESS the resume explicitly
-    states a technology list for that project or role. Examples of explicit statements:
-    - "Technologies: React, Node.js, MongoDB"
-    - "Tech Stack: Python, Kafka"
-    - "Technologies: PyTorch, LangChain"
-
-    DO NOT extract technology names from bullet point descriptions like:
-    - "Utilized Selenium for test automation" → do NOT add "Selenium" to technologies
-    - "Delivered support using ServiceNow" → do NOT add "ServiceNow" to technologies
-    - "Building frontend features for an AI/ML application" → do NOT add anything
-
-    If the technology list is not explicitly labeled/separated in the resume for a specific experience,
-    output "technologies": [].
-
-    RULE 5 — SKILLS SECTION: USE RESUME SECTION ONLY
-    Extract skills ONLY from the resume's dedicated Skills / Technical Skills section.
-    - Do NOT pull skill names from the experience descriptions, bullet points, or project descriptions.
-    - Place each item in the correct category as labeled in the resume (Languages, Web Technologies, Tools, etc.).
-    - If the resume uses a different category name (e.g. "Frameworks", "Libraries", "Databases"), map it to the
-    closest matching category in the schema, or put it in "Technologies".
-    - Keep the skill names exactly as written in the resume (e.g. "Core Java" not "Java", "C/C++" not "C++").
-
-    RULE 6 — TOTAL EXPERIENCE CALCULATION
-    Use this priority order:
-    1. If the resume's summary/profile explicitly states a number (e.g. "4 years of experience",
-        "7+ years"), use that number as total_experience_years.
-    2. Otherwise, find the EARLIEST start date among all experience entries, compute the
-        difference to today's date (treat "Present" as today), and round to 1 decimal place.
-    3. Count only professional work experience (full-time, part-time, internship, project intern).
-        Do NOT count education years or personal projects.
-
-    RULE 7 — EXPERIENCE DESCRIPTION
-    If the 'role' or 'role responsibility' is explicitly mentioned in the under any experience, extract it and put it in the 'role_responsibility' field and dont put the role like frontend developer or full stack developer in the 'role_responsibility' field.
-    Extract all bullet points, day-to-day responsibilities, and tasks performed under each job/project experience into the "description" array.
-    - This MUST be an array of strings, where each string is a bullet point from the resume.
-    - Do NOT summarize or shorten the bullet points; copy them exactly as written in the resume.
-    - If there are no bullet points or descriptions for an experience, output an empty array [].
-
-    RULE 8 — JOBS WITHOUT EXPLICIT PROJECTS
-    If a job/experience lists bullet points but does NOT explicitly group them under specific projects:
-    - Treat the entire role as a single project inside the "projects" array.
-    - Leave "project_name" and "client" as empty strings "".
-    - Put ALL the bullet points for that role into the "description" array of this single project.
+CORE RULES:
+1. VERBATIM ONLY — Every value must come directly from the resume. Never invent or infer. Empty fields = "" or [].
+2. IGNORE all "Projects"/"Personal Projects"/"Academic Projects" sections entirely.
+3. EXPERIENCE = professional work only (jobs, internships). Never include personal/academic projects.
+4. COMPANY vs CLIENT vs PROJECT — "company" = employer. "client" = external org served (only if explicitly named, else ""). "project_name" = specific system/product built. Multiple projects under one company = multiple entries in that company's "projects" array. Do NOT split one company into multiple experience entries.
+5. TECHNOLOGIES per project — Only extract if resume explicitly labels them (e.g. "Technologies:", "Tech Stack:"). Do NOT extract tech names from bullet point descriptions. If unlabeled, output [].
+6. SKILLS — Extract ONLY from the dedicated Skills/Technical Skills section. Map categories to schema (Languages, Web Technologies, Tools, Technologies, Operating System). Keep names exactly as written.
+7. TOTAL EXPERIENCE — If resume states years explicitly, use that. Otherwise compute from earliest start date to today ("Present" = today). Round to 1 decimal. Count only professional work.
+8. DESCRIPTIONS — Copy all bullet points into "description" array. Do NOT summarize. Remove any leading bullet symbols (e.g., ◆, •, -, *, etc.).
+9. ROLE RESPONSIBILITY — Extract only if explicitly stated as "role"/"role responsibility". Do not put job titles here.
+10. JOBS WITHOUT PROJECTS — Treat entire role as single project with empty "project_name" and "client".
+11. EDUCATION GRADE — Extract the grade (CGPA, GPA, percentage, or marks) for each education entry. Look for explicit mentions like "CGPA", "GPA", "Grade", "Score", "%", or patterns like "85%", "8.5/10", "3.8 GPA". If not found, output "".
+OUTPUT SCHEMA:
+{{"Name":"","Education":[{{"college":"","degree":"","graduation_year":"","grade":""}}],"Skills":{{"Languages":[],"Web Technologies":[],"Tools":[],"Technologies":[],"Operating System":[]}},"Achievements":[],"Experience":{{"total_experience_years":0.0,"experiences":[{{"company":"","designation":"","duration":"","location":"","projects":[{{"client":"","project_name":"","project_span":"","technologies":[],"description":[],"role_responsibility":""}}]}}]}}}}"""
 
 
-
-    OUTPUT SCHEMA (map ALL resume content to this exact structure)
-    {
-        "Name": "Full Name from resume",
-        "Education": [
-            {
-                "college": "Institution name",
-                "degree": "Degree title",
-                "graduation_year": "Year or range as written (e.g. '2021 – 2025' or '2019')",
-                "grade": "CGPA or % as written (e.g. '9.64' or '85%'). Use key 'grade'."
-            }
-        ],
-        "Skills": {
-            "Languages": [],
-            "Web Technologies": [],
-            "Tools": [],
-            "Technologies": [],
-            "Operating System": []
-        },
-        "Achievements": [],
-        "Experience": {
-            "total_experience_years": 0.0,
-            "experiences": [
-                {
-                    "company": "Employer name",
-                    "designation": "Job title",
-                    "duration": "Date range as written in resume",
-                    "location": "Location if mentioned, else ''",
-                    "projects": [
-                        {
-                            "client": "External client name if explicitly stated, else ''",
-                            "project_name": "Project/system name if mentioned, else ''",
-                            "project_span": "Project date range if mentioned, else ''",
-                            "technologies": [],
-                            "description": [
-                                "Bullet point 1 copied from resume exactly as written",
-                                "Bullet point 2 copied from resume exactly as written"
-                            ],
-                            "role_responsibility": "Role/responsibility text if explicitly stated, else ''"
-                        }
-                    ]
-                }
-            ]
-        }
-    }
-    """
-
-    system_prompt = system_prompt.replace("{current_year}", str(current_year)).replace("{current_month}", str(current_month))
 
     max_retries = 3
     for attempt in range(max_retries):
@@ -253,9 +136,26 @@ def extract_resume_json(resume_text, model="deepseek/deepseek-v4-flash"):
                         continue
                         
                     # --- APPLY PYTHON EXPERIENCE CALCULATION ---
-                    # if "Experience" in parsed_json and "experiences" in parsed_json["Experience"]:
-                    #     calculated_years = calculate_total_experience(parsed_json["Experience"]["experiences"])
-                    #     parsed_json["Experience"]["total_experience_years"] = calculated_years
+                    if "Experience" in parsed_json and "experiences" in parsed_json["Experience"]:
+                        calculated_years = calculate_total_experience(parsed_json["Experience"]["experiences"])
+                        if calculated_years > 0:
+                            parsed_json["Experience"]["total_experience_years"] = calculated_years
+
+                    # --- CLEAN BULLET POINTS ---
+                    def clean_text(text):
+                        if isinstance(text, str):
+                            return re.sub(r'^[◆•\-*·\s]+', '', text).strip()
+                        return text
+
+                    if "Achievements" in parsed_json and isinstance(parsed_json["Achievements"], list):
+                        parsed_json["Achievements"] = [clean_text(a) for a in parsed_json["Achievements"] if clean_text(a)]
+                        
+                    if "Experience" in parsed_json and isinstance(parsed_json["Experience"], dict) and "experiences" in parsed_json["Experience"]:
+                        for exp in parsed_json["Experience"]["experiences"]:
+                            if "projects" in exp and isinstance(exp["projects"], list):
+                                for proj in exp["projects"]:
+                                    if "description" in proj and isinstance(proj["description"], list):
+                                        proj["description"] = [clean_text(d) for d in proj["description"] if clean_text(d)]
 
                     return parsed_json
                 except json.JSONDecodeError as e:

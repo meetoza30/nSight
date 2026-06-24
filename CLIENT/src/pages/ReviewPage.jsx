@@ -251,7 +251,7 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
 
   const addEducation = () => setData((prev) => {
     const next = JSON.parse(JSON.stringify(prev));
-    next.Education.push({ college: '', degree: '', graduation_year: '', cgpa: '' });
+    next.Education.push({ college: '', degree: '', graduation_year: '', grade: '' });
     return next;
   });
 
@@ -473,8 +473,8 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
                       <input className="form-input" type="text" value={edu.graduation_year || ''} onChange={(e) => updateEducation(idx, 'graduation_year', e.target.value)} placeholder="e.g. 2024" />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">CGPA</label>
-                      <input className="form-input" type="text" value={edu.cgpa || ''} onChange={(e) => updateEducation(idx, 'cgpa', e.target.value)} placeholder="e.g. 9.0" />
+                      <label className="form-label">Grade</label>
+                      <input className="form-input" type="text" value={edu.grade || ''} onChange={(e) => updateEducation(idx, 'grade', e.target.value)} placeholder="e.g. 9.0" />
                     </div>
                   </div>
                 </div>

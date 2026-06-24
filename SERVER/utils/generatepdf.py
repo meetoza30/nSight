@@ -199,7 +199,7 @@ def education_section(education_list):
         degree = edu.get('degree', '')
         college = edu.get('college', '')
         year = edu.get('graduation_year', '')
-        cgpa = edu.get('cgpa', '')
+        grade = edu.get('grade', '')
         
         # Format with College: and Degree: labels
         if college:
@@ -211,8 +211,8 @@ def education_section(education_list):
         if year:
             text = f'<font color="#0B6FA4"><b>Graduation Year:</b></font> {year}'
             elements.append(Paragraph(text, body_style))
-        if cgpa:
-            text = f'<font color="#0B6FA4"><b>CGPA:</b></font> {cgpa}'
+        if grade:
+            text = f'<font color="#0B6FA4"><b>grade:</b></font> {grade}'
             elements.append(Paragraph(text, body_style))
         
         elements.append(Spacer(1, 6))
