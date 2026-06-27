@@ -74,7 +74,7 @@ def extract_pages_preserving_layout(pdf_path):
         return []
     return pages_text
 
-# 2. LLM EXTRACTION VIA OPENROUTER
+# 2. LLM EXTRACTION VIA OPENROUT
 
 
 def extract_resume_json(resume_text, model="deepseek/deepseek-v4-flash"):
