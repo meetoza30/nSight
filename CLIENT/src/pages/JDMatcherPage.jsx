@@ -14,9 +14,7 @@ function JDMatcherPage({ onMatchComplete }) {
   const [isDragging, setIsDragging] = useState(false);
   const resumeInputRef = useRef(null);
 
-
   const [isLoading, setIsLoading] = useState(false);
-  // const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
 
   /* ---- JD FILE HANDLERS ---- */
@@ -64,24 +62,12 @@ function JDMatcherPage({ onMatchComplete }) {
     resumeFiles.forEach(f => formData.append('resume_files', f));
 
     setIsLoading(true);
-    // setProgress(0);
-
-    // Animate progress bar (fake progress during API call)
-    // const progressInterval = setInterval(() => {
-    //   setProgress(p => {
-    //     if (p >= 88) { clearInterval(progressInterval); return p; }
-    //     return p + Math.random() * 6;
-    //   });
-    // }, 600);
 
     try {
       const res = await fetch(`${API_BASE}/match-bulk`, {
         method: 'POST',
         body: formData,
       });
-
-      // clearInterval(progressInterval);
-      // setProgress(100);
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -93,9 +79,7 @@ function JDMatcherPage({ onMatchComplete }) {
 
       setTimeout(() => navigate('/jd-results'), 300);
     } catch (err) {
-      // clearInterval(progressInterval);
       setIsLoading(false);
-      // setProgress(0);
       setError(err.message || 'Something went wrong. Please try again.');
     }
   };
@@ -105,33 +89,33 @@ function JDMatcherPage({ onMatchComplete }) {
     return (
       <div className="jd-matcher-page-container">
         <div className="jdm-header-top">
-        <div className="jdm-header-left">
-        <div className="jdm-icon-wrap">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+          <div className="jdm-header-left">
+            <div className="jdm-icon-wrap">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="jdm-title">Resume analyzer</h2>
+              <p className="jdm-subtitle">Match multiple resumes against a single Job Description</p>
+            </div>
+          </div>
+          {/* ---- Submit ---- */}
+          <div className="jdm-footer">
+            <button
+              id="jdm-submit-btn"
+              className="primary-btn jdm-submit-btn"
+              onClick={handleSubmit}
+              disabled={isLoading}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              Run analysis
+            </button>
+            <button className="outline-btn" onClick={() => navigate('/')}>Back</button>
+          </div>
         </div>
-        <div>
-          <h2 className="jdm-title">Resume analyzer</h2>
-          <p className="jdm-subtitle">Match multiple resumes against a single Job Description</p>
-        </div>
-        </div>
-        {/* ---- Submit ---- */}
-        <div className="jdm-footer">
-          <button
-            id="jdm-submit-btn"
-            className="primary-btn jdm-submit-btn"
-            onClick={handleSubmit}
-            disabled={isLoading}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            Run analysis
-          </button>
-          <button className="outline-btn" onClick={() => navigate('/')}>Back</button>
-        </div>
-      </div>
 
         <div className="jdm-section glass-card jd-loading-state">
           <div className="jd-scanner-icon">
@@ -155,15 +139,15 @@ function JDMatcherPage({ onMatchComplete }) {
       {/* Header top */}
       <div className="jdm-header-top">
         <div className="jdm-header-left">
-        <div className="jdm-icon-wrap">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        </div>
-        <div>
-          <h2 className="jdm-title">Resume analyzer</h2>
-          <p className="jdm-subtitle">Match multiple resumes against a single Job Description</p>
-        </div>
+          <div className="jdm-icon-wrap">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="jdm-title">Resume analyzer</h2>
+            <p className="jdm-subtitle">Match multiple resumes against a single Job Description</p>
+          </div>
         </div>
         {/* ---- Submit ---- */}
         <div className="jdm-footer">
@@ -322,7 +306,7 @@ function JDMatcherPage({ onMatchComplete }) {
         </section>
       </div>
 
-      
+
     </div>
   );
 }
