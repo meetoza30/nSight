@@ -5,7 +5,7 @@ import re
 import datetime
 import time
 from dateutil import parser
-from utils.generatepdf import generate_resume_pdf
+# from utils.generatepdf import generate_resume_pdf
 from dotenv import load_dotenv
 import os
 
@@ -119,7 +119,7 @@ OUTPUT SCHEMA:
             print("Total Tokens:", data["usage"]["total_tokens"])
             response.raise_for_status()
             result_text = response.json()['choices'][0]['message']['content'].strip()
-            print(result_text)
+            # print(result_text)
             
             # JSON Catcher
             start_idx = result_text.find('{')
@@ -138,8 +138,10 @@ OUTPUT SCHEMA:
                     # --- APPLY PYTHON EXPERIENCE CALCULATION ---
                     if "Experience" in parsed_json and "experiences" in parsed_json["Experience"]:
                         calculated_years = calculate_total_experience(parsed_json["Experience"]["experiences"])
-                        if calculated_years > 0:
-                            parsed_json["Experience"]["total_experience_years"] = calculated_years
+                        print("calculated_years : ", calculated_years)
+                        # print()
+                        # if calculated_years > 0:
+                        #     parsed_json["Experience"]["total_experience_years"] = calculated_years
 
                     # --- CLEAN BULLET POINTS ---
                     def clean_text(text):
@@ -189,7 +191,7 @@ def process_resume(file_path):
     if not full_text:
         print("Empty or unreadable PDF")
         return
-
+    print("text", full_text)
     print("Extracting data via LLM...")
     extracted_data = extract_resume_json(full_text)
     
@@ -205,8 +207,8 @@ def process_resume(file_path):
 
 if __name__ == "__main__":
     resume_paths = [
-        # "./Resumes/Priyanshi.pdf",
-        "./Resumes/Akash ShahakarQA26.pdf",
+        "./Resumes/Aman_Babu_s_Resume__Copy_ (1).pdf",
+        # "./Resumes/Akash ShahakarQA26.pdf",
         # "./Resumes/maruf.pdf",
         # "./Resumes/Anjali_Verma_Resume.pdf",
         # "./Resumes/SagarManojNikam_DS.pdf",
