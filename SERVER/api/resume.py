@@ -5,7 +5,7 @@ import json
 from typing import List, Optional
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from services.resume_processor import process_resume_file
 from services.resume_extraction import extract_text_preserving_layout
@@ -13,6 +13,7 @@ from services.jdExtracter import extract_jd_with_llm
 from services.matcher import match_resume_to_jd
 from utils.generatepdf import generate_resume_pdf
 from utils.generatereport import generate_match_report_pdf
+from middleware.rate_limiter import check_rate_limit, increment_active, decrement_active
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file
 os.makedirs(STATIC_DIR, exist_ok=True)
 
 @router.post("/extract-resume")
-async def extract_resume(file: UploadFile = File(...)):
+async def extract_resume(request: Request, file: UploadFile = File(...)):
     """
     Upload a resume PDF and extract structured data from it.
     
@@ -29,6 +30,9 @@ async def extract_resume(file: UploadFile = File(...)):
     Returns:
         dict: Extracted resume data as JSON for the frontend to display/edit
     """
+    # ── Rate limit check ─────────────────────────────────────────────
+    rate_headers = check_rate_limit(request, cost=1)
+
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(
             status_code=400, 
@@ -38,6 +42,7 @@ async def extract_resume(file: UploadFile = File(...)):
     temp_dir = tempfile.mkdtemp()
     temp_input_path = os.path.join(temp_dir, file.filename)
     
+    increment_active()
     try:
         with open(temp_input_path, "wb") as buffer:
             content = await file.read()
@@ -48,10 +53,11 @@ async def extract_resume(file: UploadFile = File(...)):
         
         print(f"Extracted Name: {extracted_data.get('Name', 'Unknown')}")
         
-        return {
+        response_data = {
             "success": True,
             "data": extracted_data
         }
+        return JSONResponse(content=response_data, headers=rate_headers)
         
     except HTTPException:
         raise
@@ -62,6 +68,7 @@ async def extract_resume(file: UploadFile = File(...)):
             detail=f"Error processing resume: {str(e)}"
         )
     finally:
+        decrement_active()
         try:
             shutil.rmtree(temp_dir)
         except:
@@ -121,6 +128,7 @@ async def generate_resume(request: Request):
 
 @router.post("/match-bulk")
 async def match_bulk_resumes(
+    request: Request,
     jd_file: Optional[UploadFile] = File(None),
     jd_text: Optional[str] = Form(None),
     resume_files: List[UploadFile] = File(...)
@@ -232,11 +240,12 @@ async def match_bulk_resumes(
         except Exception as pdf_e:
             print(f"PDF report generation failed (non-fatal): {pdf_e}")
 
-        return {
+        response_data = {
             "success": True,
             "results": frontend_results,
             "report_download_url": report_download_url,
         }
+        return JSONResponse(content=response_data)
 
     except HTTPException:
         raise

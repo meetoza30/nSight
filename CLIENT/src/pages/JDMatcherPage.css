@@ -14,7 +14,7 @@
   }
 }
 
-.jdm-header-left{
+.jdm-header-left {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -236,7 +236,9 @@
   color: #5B21B6;
 }
 
-.jdm-file-chip span { flex: 1; }
+.jdm-file-chip span {
+  flex: 1;
+}
 
 .jdm-chip-remove {
   background: none;
@@ -249,7 +251,9 @@
   transition: opacity 0.2s;
 }
 
-.jdm-chip-remove:hover { opacity: 0.6; }
+.jdm-chip-remove:hover {
+  opacity: 0.6;
+}
 
 /* ---- Dropzone ---- */
 .jdm-dropzone {
@@ -326,7 +330,9 @@
   transition: opacity 0.2s;
 }
 
-.jdm-clear-all:hover { opacity: 0.7; }
+.jdm-clear-all:hover {
+  opacity: 0.7;
+}
 
 .jdm-file-row {
   display: flex;
@@ -339,8 +345,13 @@
   transition: background 0.15s;
 }
 
-.jdm-file-row:last-child { border-bottom: none; }
-.jdm-file-row:hover { background: #F8FAFC; }
+.jdm-file-row:last-child {
+  border-bottom: none;
+}
+
+.jdm-file-row:hover {
+  background: #F8FAFC;
+}
 
 .jdm-file-name {
   flex: 1;
@@ -368,7 +379,9 @@
   transition: color 0.2s;
 }
 
-.jdm-remove-file:hover { color: #DC2626; }
+.jdm-remove-file:hover {
+  color: #DC2626;
+}
 
 /* ---- Footer ---- */
 .jdm-footer {
@@ -416,8 +429,17 @@
 }
 
 @keyframes jdScanPulse {
-  0%, 100% { transform: scale(1); opacity: 0.85; }
-  50% { transform: scale(1.12); opacity: 1; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
 }
 
 .jd-scan-ring {
@@ -430,8 +452,15 @@
 }
 
 @keyframes jdRingExpand {
-  0% { transform: scale(0.7); opacity: 0.6; }
-  100% { transform: scale(1.4); opacity: 0; }
+  0% {
+    transform: scale(0.7);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
 }
 
 .jd-loading-title {

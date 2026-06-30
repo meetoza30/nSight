@@ -139,3 +139,106 @@
     transform: translateX(100%);
   }
 }
+
+/* ── Rate-Limit Cooldown UI ─────────────────────────────────────────── */
+
+.rate-limit-card {
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  background: linear-gradient(
+    135deg,
+    rgba(219, 234, 254, 0.15) 0%,
+    rgba(191, 219, 254, 0.08) 100%
+  );
+}
+
+.rate-limit-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  animation: rateLimitPulse 2s ease-in-out infinite;
+}
+
+.rate-limit-icon svg {
+  color: var(--accent-blue);
+}
+
+.rate-limit-title {
+  color: #1E3A8A !important;
+  font-size: 24px !important;
+}
+
+.rate-limit-sub {
+  color: #1E40AF;
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+.cooldown-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 28px 0 20px;
+}
+
+.cooldown-number {
+  font-size: 56px;
+  font-weight: 800;
+  color: var(--accent-blue);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  animation: cooldownTick 1s ease-in-out infinite;
+}
+
+.cooldown-label {
+  font-size: 13px;
+  color: #1E40AF;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 6px;
+}
+
+.cooldown-bar-track {
+  width: 100%;
+  max-width: 320px;
+  height: 4px;
+  background: rgba(37, 99, 235, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.cooldown-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #3B82F6, #2563EB);
+  border-radius: 4px;
+  transform-origin: left;
+  animation: cooldownShrink linear forwards;
+}
+
+.rate-limit-hint {
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+@keyframes rateLimitPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.05); opacity: 0.85; }
+}
+
+@keyframes cooldownTick {
+  0%, 100% { transform: scale(1); }
+  15%      { transform: scale(1.08); }
+}
+
+@keyframes cooldownShrink {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
