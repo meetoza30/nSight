@@ -63,13 +63,14 @@ def extract_text_preserving_layout(pdf_path):
 
 # 2. LLM EXTRACTION VIA OPENROUTER
 
-def extract_resume_json(resume_text, model="deepseek/deepseek-v4-flash"):
+def extract_resume_json(resume_text, model="mistralai/mistral-nemo"):
     """Sends the resume text to OpenRouter and returns a parsed JSON dictionary."""
     
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
     
     current_year = datetime.date.today().year
     current_month = datetime.date.today().strftime("%B")
+    start = time.perf_counter()
     
     system_prompt = f"""You are a JSON-only data extraction API. Output raw valid JSON — no markdown, no explanation.
 
@@ -120,6 +121,9 @@ OUTPUT SCHEMA:
             response.raise_for_status()
             result_text = response.json()['choices'][0]['message']['content'].strip()
             # print(result_text)
+            end = time.perf_counter()
+
+            print(f"LLM call took {end - start:.2f} seconds")
             
             # JSON Catcher
             start_idx = result_text.find('{')
