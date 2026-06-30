@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 
 from api import resume
+from middleware.rate_limiter import get_load_info
 
 app = FastAPI(
     title="nCircle Resume Parser API",
@@ -18,7 +19,13 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Content-Disposition"],
+    expose_headers=[
+        "Content-Disposition",
+        "X-RateLimit-Limit",
+        "X-RateLimit-Remaining",
+        "X-RateLimit-Reset",
+        "Retry-After",
+    ],
 )
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
@@ -44,6 +51,11 @@ async def health_check():
         "service": "nCircle Resume Parser + JD Matcher",
         "version": "3.0.0"
     }
+
+@app.get("/load")
+async def load_info():
+    """Return current server load and rate-limit status (for debugging)."""
+    return get_load_info()
 
 if __name__ == "__main__":
     import uvicorn

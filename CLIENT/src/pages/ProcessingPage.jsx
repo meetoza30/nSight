@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ProcessingPage.css';
 import { API_BASE } from '../utils/api';
@@ -6,8 +6,37 @@ import { API_BASE } from '../utils/api';
 function ProcessingPage({ file, onExtractComplete }) {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
+  const [rateLimited, setRateLimited] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   const hasUploaded = useRef(false);
+  const cooldownRef = useRef(null);
+
+  // Countdown timer for rate-limit cooldown
+  const startCooldown = useCallback((seconds) => {
+    setRateLimited(true);
+    setCooldown(seconds);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+
+    cooldownRef.current = setInterval(() => {
+      setCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current);
+          cooldownRef.current = null;
+          // Redirect back to upload after cooldown
+          navigate('/upload');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [navigate]);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (hasUploaded.current) return;
@@ -32,6 +61,18 @@ function ProcessingPage({ file, onExtractComplete }) {
 
         clearInterval(progressInterval);
 
+        // ── Handle 429 Rate Limited ──────────────────────────────────
+        if (response.status === 429) {
+          const errData = await response.json().catch(() => ({}));
+          const detail = errData.detail || {};
+          const retryAfter =
+            detail.retry_after ||
+            parseInt(response.headers.get('Retry-After') || '30', 10);
+
+          startCooldown(retryAfter);
+          return;
+        }
+
         if (!response.ok) {
           throw new Error('Failed to process resume');
         }
@@ -55,8 +96,37 @@ function ProcessingPage({ file, onExtractComplete }) {
     };
 
     uploadResume();
-  }, [file, navigate, onExtractComplete]);
+  }, [file, navigate, onExtractComplete, startCooldown]);
 
+  // ── Rate-limited state ───────────────────────────────────────────────
+  if (rateLimited) {
+    return (
+      <div className="processing-page glass-card rate-limit-card">
+        <div className="rate-limit-icon">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+        </div>
+        <h2 className="processing-title rate-limit-title">
+          Slow down — server is busy
+        </h2>
+        <p className="processing-subtitle rate-limit-sub">
+          You've uploaded too many resumes in a short time. Please wait before trying again.
+        </p>
+        <div className="cooldown-timer">
+          <span className="cooldown-number">{cooldown}</span>
+          <span className="cooldown-label">seconds remaining</span>
+        </div>
+        <div className="cooldown-bar-track">
+          <div className="cooldown-bar-fill" style={{ animationDuration: `${cooldown}s` }} />
+        </div>
+        <p className="rate-limit-hint">You'll be redirected automatically.</p>
+      </div>
+    );
+  }
+
+  // ── Normal processing state ──────────────────────────────────────────
   return (
     <div className="processing-page glass-card">
       <h2 className="processing-title">Extracting details from your resume...</h2>
