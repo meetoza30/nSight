@@ -5,7 +5,7 @@ import re
 import datetime
 import time
 from dateutil import parser
-# from utils.generatepdf import generate_resume_pdf
+from utils.generatepdf import generate_resume_pdf
 from dotenv import load_dotenv
 import os
 
@@ -60,10 +60,9 @@ def extract_text_preserving_layout(pdf_path):
         print(f"Error reading PDF: {e}")
         return ""
     return full_text
-
 # 2. LLM EXTRACTION VIA OPENROUTER
 
-def extract_resume_json(resume_text, model="mistralai/mistral-nemo"):
+def extract_resume_json(resume_text, model="google/gemini-2.5-flash"):
     """Sends the resume text to OpenRouter and returns a parsed JSON dictionary."""
     
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -72,26 +71,23 @@ def extract_resume_json(resume_text, model="mistralai/mistral-nemo"):
     current_month = datetime.date.today().strftime("%B")
     start = time.perf_counter()
     
-    system_prompt = f"""You are a JSON-only data extraction API. Output raw valid JSON — no markdown, no explanation.
+    system_prompt = f"""You are a JSON-only resume extraction API. Output raw valid JSON matching the schema — no markdown, no explanation.
 
 TODAY'S DATE: {current_month} {current_year}
 
-CORE RULES:
-1. VERBATIM ONLY — Every value must come directly from the resume. Never invent or infer. Empty fields = "" or [].
-2. IGNORE all "Projects"/"Personal Projects"/"Academic Projects" sections entirely.
-3. EXPERIENCE = professional work only (jobs, internships). Never include personal/academic projects.
-4. COMPANY vs CLIENT vs PROJECT — "company" = employer. "client" = external org served (only if explicitly named, else ""). "project_name" = specific system/product built. Multiple projects under one company = multiple entries in that company's "projects" array. Do NOT split one company into multiple experience entries.
-5. TECHNOLOGIES per project — Only extract if resume explicitly labels them (e.g. "Technologies:", "Tech Stack:"). Do NOT extract tech names from bullet point descriptions. If unlabeled, output [].
-6. SKILLS — Extract ONLY from the dedicated Skills/Technical Skills section. Map categories to schema (Languages, Web Technologies, Tools, Technologies, Operating System). Keep names exactly as written.
-7. TOTAL EXPERIENCE — If resume states years explicitly, use that. Otherwise compute from earliest start date to today ("Present" = today). Round to 1 decimal. Count only professional work.
-8. DESCRIPTIONS — Copy all bullet points into "description" array. Do NOT summarize. Remove any leading bullet symbols (e.g., ◆, •, -, *, etc.).
-9. ROLE RESPONSIBILITY — Extract only if explicitly stated as "role"/"role responsibility". Do not put job titles here.
-10. JOBS WITHOUT PROJECTS — Treat entire role as single project with empty "project_name" and "client".
-11. EDUCATION GRADE — Extract the grade (CGPA, GPA, percentage, or marks) for each education entry. Look for explicit mentions like "CGPA", "GPA", "Grade", "Score", "%", or patterns like "85%", "8.5/10", "3.8 GPA". If not found, output "".
-OUTPUT SCHEMA:
+RULES:
+1. VERBATIM — Extract values directly from the resume. Never invent/infer. Empty fields = "" or [].
+2. NO PERSONAL/ACADEMIC PROJECTS — Extract professional work experience (jobs, internships) only. Ignore standalone personal/academic projects.
+3. STRUCTURE:
+   - "company" = employer; "client" = external client (if named); "project_name" = system/product built.
+   - List multiple projects under the same company entry. Do not split a company into multiple experience entries.
+   - For jobs without projects, output a single project entry with empty "project_name" and "client".
+4. SKILLS — Extract only from dedicated Skills/Technical Skills sections, mapping to Languages, Web Technologies, Tools, Technologies, Operating System. Keep names exactly as written.
+5. GRADE — Extract grade (GPA, percentage, marks) for each education entry. Default to "".
+6. DESCRIPTIONS — Extract bullet points into "description" array verbatim. Do not summarize.
+
+SCHEMA:
 {{"Name":"","Education":[{{"college":"","degree":"","graduation_year":"","grade":""}}],"Skills":{{"Languages":[],"Web Technologies":[],"Tools":[],"Technologies":[],"Operating System":[]}},"Achievements":[],"Experience":{{"total_experience_years":0.0,"experiences":[{{"company":"","designation":"","duration":"","location":"","projects":[{{"client":"","project_name":"","project_span":"","technologies":[],"description":[],"role_responsibility":""}}]}}]}}}}"""
-
-
 
     max_retries = 3
     for attempt in range(max_retries):
@@ -110,7 +106,8 @@ OUTPUT SCHEMA:
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": f"Extract this resume and return ONLY a valid JSON object with no markdown:\n\n{resume_text}"}
                     ],
-                    "temperature": 0.1
+                    "temperature": 0.1,
+                    "max_tokens": 2000
                 })
             )
             data = response.json()
@@ -120,9 +117,9 @@ OUTPUT SCHEMA:
             print("Total Tokens:", data["usage"]["total_tokens"])
             response.raise_for_status()
             result_text = response.json()['choices'][0]['message']['content'].strip()
-            # print(result_text)
+            print(result_text)
+            
             end = time.perf_counter()
-
             print(f"LLM call took {end - start:.2f} seconds")
             
             # JSON Catcher
@@ -143,9 +140,8 @@ OUTPUT SCHEMA:
                     if "Experience" in parsed_json and "experiences" in parsed_json["Experience"]:
                         calculated_years = calculate_total_experience(parsed_json["Experience"]["experiences"])
                         print("calculated_years : ", calculated_years)
-                        # print()
-                        # if calculated_years > 0:
-                        #     parsed_json["Experience"]["total_experience_years"] = calculated_years
+                        if calculated_years > 0:
+                            parsed_json["Experience"]["total_experience_years"] = calculated_years
 
                     # --- CLEAN BULLET POINTS ---
                     def clean_text(text):
@@ -183,7 +179,6 @@ OUTPUT SCHEMA:
             if attempt == max_retries - 1:
                 return None
             time.sleep(2)
-            
     return None
 
 # 3. MAIN RUNNER
@@ -195,7 +190,7 @@ def process_resume(file_path):
     if not full_text:
         print("Empty or unreadable PDF")
         return
-    print("text", full_text)
+
     print("Extracting data via LLM...")
     extracted_data = extract_resume_json(full_text)
     
@@ -211,8 +206,8 @@ def process_resume(file_path):
 
 if __name__ == "__main__":
     resume_paths = [
-        "./Resumes/Aman_Babu_s_Resume__Copy_ (1).pdf",
-        # "./Resumes/Akash ShahakarQA26.pdf",
+        # "./Resumes/Priyanshi.pdf",
+        "./Resumes/Akash ShahakarQA26.pdf",
         # "./Resumes/maruf.pdf",
         # "./Resumes/Anjali_Verma_Resume.pdf",
         # "./Resumes/SagarManojNikam_DS.pdf",
