@@ -77,7 +77,7 @@ def extract_pages_preserving_layout(pdf_path):
 # 2. LLM EXTRACTION VIA OPENROUT
 
 
-def extract_resume_json(resume_text, model="deepseek/deepseek-v4-flash"):
+def extract_resume_json(resume_text, model="mistralai/mistral-nemo", token_usage_tracker=None):
     """Sends the resume text to OpenRouter and returns a parsed JSON dictionary."""
     
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -131,6 +131,8 @@ OUTPUT SCHEMA:
             print("Prompt Tokens:", data["usage"]["prompt_tokens"])
             print("Completion Tokens:", data["usage"]["completion_tokens"])
             print("Total Tokens:", data["usage"]["total_tokens"])
+            if token_usage_tracker is not None and isinstance(token_usage_tracker, list):
+                token_usage_tracker.append(data["usage"])
             response.raise_for_status()
             result_text = response.json()['choices'][0]['message']['content'].strip()
             print(result_text)
@@ -194,20 +196,11 @@ OUTPUT SCHEMA:
             
     return None
 
-def extract_resume_json_chunked(pages_text, model="deepseek/deepseek-v4-flash"):
+def merge_resume_jsons(json_list):
     """
-    Processes the resume page-by-page. For each page, sends the page text and the
-    accumulated JSON state to the LLM to update/merge.
-    Saves intermediate states to SERVER/temp_states/ on the server.
+    Merges multiple parsed resume JSON objects into one.
     """
-    import uuid
-    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-    
-    current_year = datetime.date.today().year
-    current_month = datetime.date.today().strftime("%B")
-    
-    # 1. Initialize the empty/template state
-    current_state = {
+    merged = {
         "Name": "",
         "Education": [],
         "Skills": {
@@ -224,159 +217,279 @@ def extract_resume_json_chunked(pages_text, model="deepseek/deepseek-v4-flash"):
         }
     }
     
-    # 2. Setup storage directory
-    # SERVER directory is the parent of the folder containing this file (services)
+    for data in json_list:
+        if not data or not isinstance(data, dict):
+            continue
+            
+        # 1. Name: Take first non-empty name
+        if not merged["Name"] and data.get("Name"):
+            merged["Name"] = data["Name"]
+            
+        # 2. Education: Merge without duplicates
+        for edu in data.get("Education", []):
+            if not isinstance(edu, dict):
+                continue
+            college = edu.get("college", "") or ""
+            degree = edu.get("degree", "") or ""
+            college_clean = str(college).strip().lower()
+            degree_clean = str(degree).strip().lower()
+            
+            exists = False
+            for m_edu in merged["Education"]:
+                m_college_clean = str(m_edu.get("college", "")).strip().lower()
+                m_degree_clean = str(m_edu.get("degree", "")).strip().lower()
+                if college_clean == m_college_clean and degree_clean == m_degree_clean:
+                    # Update grade if not set
+                    if not m_edu.get("grade") and edu.get("grade"):
+                        m_edu["grade"] = edu["grade"]
+                    # Update graduation_year if not set
+                    if not m_edu.get("graduation_year") and edu.get("graduation_year"):
+                        m_edu["graduation_year"] = edu["graduation_year"]
+                    exists = True
+                    break
+            if not exists:
+                merged["Education"].append(edu)
+                
+        # 3. Skills: Merge without duplicates
+        skills_data = data.get("Skills", {})
+        if isinstance(skills_data, dict):
+            for category in ["Languages", "Web Technologies", "Tools", "Technologies", "Operating System"]:
+                if category not in merged["Skills"]:
+                    merged["Skills"][category] = []
+                existing_skills_lower = {str(s).lower().strip(): s for s in merged["Skills"][category]}
+                for skill in skills_data.get(category, []):
+                    skill_clean = str(skill).strip()
+                    if skill_clean.lower() not in existing_skills_lower:
+                        merged["Skills"][category].append(skill_clean)
+                        existing_skills_lower[skill_clean.lower()] = skill_clean
+                        
+        # 4. Achievements: Merge without duplicates
+        for ach in data.get("Achievements", []):
+            ach_clean = str(ach).strip()
+            if ach_clean and ach_clean not in merged["Achievements"]:
+                merged["Achievements"].append(ach_clean)
+                
+        # 5. Experience: Merge experiences
+        exp_data = data.get("Experience", {})
+        if isinstance(exp_data, dict):
+            for exp in exp_data.get("experiences", []):
+                if not isinstance(exp, dict):
+                    continue
+                company = exp.get("company", "") or ""
+                designation = exp.get("designation", "") or ""
+                company_clean = str(company).strip().lower()
+                if not company_clean:
+                    continue
+                    
+                # Try to find a matching company in merged experiences
+                matched_exp = None
+                for m_exp in merged["Experience"]["experiences"]:
+                    if str(m_exp.get("company", "")).strip().lower() == company_clean:
+                        matched_exp = m_exp
+                        break
+                        
+                if matched_exp:
+                    # Merge designation/duration/location if not set
+                    if not matched_exp.get("designation") and designation:
+                        matched_exp["designation"] = designation
+                    if not matched_exp.get("duration") and exp.get("duration"):
+                        matched_exp["duration"] = exp["duration"]
+                    if not matched_exp.get("location") and exp.get("location"):
+                        matched_exp["location"] = exp["location"]
+                        
+                    # Merge projects
+                    for proj in exp.get("projects", []):
+                        if not isinstance(proj, dict):
+                            continue
+                        proj_name = proj.get("project_name", "") or ""
+                        proj_name_clean = str(proj_name).strip().lower()
+                        
+                        matched_proj = None
+                        if proj_name_clean:
+                            for m_proj in matched_exp.get("projects", []):
+                                if str(m_proj.get("project_name", "")).strip().lower() == proj_name_clean:
+                                    matched_proj = m_proj
+                                    break
+                                    
+                        if matched_proj:
+                            # Merge project details
+                            if not matched_proj.get("client") and proj.get("client"):
+                                matched_proj["client"] = proj["client"]
+                            if not matched_proj.get("project_span") and proj.get("project_span"):
+                                matched_proj["project_span"] = proj["project_span"]
+                            if not matched_proj.get("role_responsibility") and proj.get("role_responsibility"):
+                                matched_proj["role_responsibility"] = proj["role_responsibility"]
+                                
+                            # Merge technologies
+                            existing_tech = {str(t).lower().strip() for t in matched_proj.get("technologies", [])}
+                            for tech in proj.get("technologies", []):
+                                tech_clean = str(tech).strip()
+                                if tech_clean.lower() not in existing_tech:
+                                    matched_proj["technologies"].append(tech_clean)
+                                    existing_tech.add(tech_clean.lower())
+                                    
+                            # Merge description
+                            for desc in proj.get("description", []):
+                                desc_clean = str(desc).strip()
+                                if desc_clean and desc_clean not in matched_proj["description"]:
+                                    matched_proj["description"].append(desc_clean)
+                        else:
+                            matched_exp["projects"].append(proj)
+                else:
+                    merged["Experience"]["experiences"].append(exp)
+                    
+    return merged
+
+
+def extract_resume_json_chunked(pages_text, model="mistralai/mistral-nemo"):
+    """
+    Processes the resume page-by-page/chunk-by-chunk. 
+    - If total pages <= 3, combines them and makes a single LLM API call.
+    - If total pages > 3, groups pages into chunks of 2 pages, extracts them in parallel,
+      and merges the parsed JSON states in Python.
+    Saves intermediate/final states to SERVER/temp_states/ on the server.
+    """
+    import concurrent.futures
+    import uuid
+    
+    # Track all token usages
+    token_usage_tracker = []
+    
+    # Filter out empty pages
+    non_empty_pages = [(idx + 1, text) for idx, text in enumerate(pages_text) if text.strip()]
+    if not non_empty_pages:
+        return {
+            "Name": "",
+            "Education": [],
+            "Skills": {
+                "Languages": [],
+                "Web Technologies": [],
+                "Tools": [],
+                "Technologies": [],
+                "Operating System": []
+            },
+            "Achievements": [],
+            "Experience": {
+                "total_experience_years": 0.0,
+                "experiences": []
+            }
+        }
+        
+    total_pages = len(pages_text)
     server_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     temp_states_dir = os.path.join(server_dir, "temp_states")
     os.makedirs(temp_states_dir, exist_ok=True)
     
     process_uuid = str(uuid.uuid4())
-    print(f"Starting chunked processing. Process UUID: {process_uuid}")
-    
-    total_pages = len(pages_text)
-    
-    schema_string = json.dumps({
-        "Name": "",
-        "Education": [{"college": "", "degree": "", "graduation_year": "", "grade": ""}],
-        "Skills": {
-            "Languages": [],
-            "Web Technologies": [],
-            "Tools": [],
-            "Technologies": [],
-            "Operating System": []
-        },
-        "Achievements": [],
-        "Experience": {
-            "total_experience_years": 0.0,
-            "experiences": [{
-                "company": "",
-                "designation": "",
-                "duration": "",
-                "location": "",
-                "projects": [{
-                    "client": "",
-                    "project_name": "",
-                    "project_span": "",
-                    "technologies": [],
-                    "description": [],
-                    "role_responsibility": ""
-                }]
-            }]
-        }
-    })
+    print(f"Starting optimized resume parsing. Process UUID: {process_uuid}, Total Pages: {total_pages}, Non-empty Pages: {len(non_empty_pages)}")
 
-    # Filter out empty pages, but keep track of indices for logging
-    non_empty_pages = [(idx + 1, text) for idx, text in enumerate(pages_text) if text.strip()]
-    if not non_empty_pages:
-        return current_state
+    # 1. Single call optimization for <= 3 pages
+    if len(non_empty_pages) <= 3:
+        print("Using single call extraction (<= 3 pages)...")
+        combined_text = "\n\n".join([text for _, text in non_empty_pages])
+        result = extract_resume_json(combined_text, model=model, token_usage_tracker=token_usage_tracker)
         
-    for seq_num, (page_num, page_text) in enumerate(non_empty_pages):
-        print(f"Processing page {page_num}/{total_pages} (Sequence {seq_num + 1}/{len(non_empty_pages)})...")
-        
-        system_prompt = f"""You are a JSON-only data extraction API. Output raw valid JSON — no markdown, no explanation.
-
-TODAY'S DATE: {current_month} {current_year}
-
-You are processing a multi-page resume page-by-page.
-Currently processing Page {page_num} of {total_pages}.
-
-You are given:
-1. The accumulated JSON state from previous pages.
-2. The raw text of the current page.
-
-Your task is to extract information from the current page and update/merge it into the existing accumulated JSON state.
-
-CORE RULES FOR EXTRACTION & MERGING:
-1. VERBATIM ONLY — Every new value must come directly from the current page text. Never invent or infer.
-2. NAME — If "Name" is empty in the accumulated JSON state, extract the candidate's name if it appears on this page. Otherwise, preserve the existing "Name".
-3. EDUCATION — If new education entries are found, append them to the "Education" list. Ensure no duplicate degrees/colleges are added.
-4. SKILLS — Extract skills ONLY from dedicated skills sections if present on this page. Merge them into the existing "Skills" categories (Languages, Web Technologies, Tools, Technologies, Operating System) without duplicates. Keep names exactly as written.
-5. ACHIEVEMENTS — Append any new achievements found to the "Achievements" list verbatim.
-6. EXPERIENCE:
-   - Identify professional work experiences (jobs, internships) on this page.
-   - If an experience belongs to a company already present in the accumulated JSON's "experiences" list (match by company name), merge the new projects/descriptions into that existing company's entry rather than creating a new company entry.
-   - If it's a new company, append a new experience entry to the list.
-   - Ensure you do NOT delete or lose any existing companies or projects from the accumulated JSON state. All previous experience and projects MUST be preserved.
-   - Copy all bullet points into the "description" array. Do NOT summarize. Remove leading bullet symbols (e.g. ◆, •, -, *, etc.).
-   - Treat roles without explicit projects as a single project with empty "project_name" and "client".
-7. TOTAL EXPERIENCE — Set "total_experience_years" to 0.0 for now. It will be computed at the end in Python.
-8. IGNORE all "Projects"/"Personal Projects"/"Academic Projects" sections. Extract professional experience only.
-9. OUTPUT FORMAT — Output ONLY the final updated JSON matching the schema below. Keep all keys and structure intact.
-
-JSON SCHEMA:
-{schema_string}
-"""
-
-        max_retries = 3
-        success = False
-        parsed_json = None
-        
-        for attempt in range(max_retries):
-            try:
-                response = requests.post(
-                    url="https://openrouter.ai/api/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                        "Content-Type": "application/json"
-                    },
-                    data=json.dumps({
-                        "model": model,
-                        "response_format": {"type": "json_object"},
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {
-                                "role": "user",
-                                "content": f"Accumulated JSON State:\n{json.dumps(current_state, ensure_ascii=False)}\n\nCurrent Page Text:\n{page_text}"
-                            }
-                        ],
-                        "temperature": 0.1
-                    })
-                )
-                response.raise_for_status()
-                data = response.json()
-                result_text = data['choices'][0]['message']['content'].strip()
-                
-                # JSON Catcher
-                start_idx = result_text.find('{')
-                end_idx = result_text.rfind('}')
-                
-                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                    clean_json_string = result_text[start_idx:end_idx+1]
-                    parsed_json = json.loads(clean_json_string)
-                    
-                    if isinstance(parsed_json, dict) and "Experience" in parsed_json:
-                        success = True
-                        break
-                    else:
-                        print(f"Format validation failed on page {page_num}, attempt {attempt + 1}. Retrying...")
-                else:
-                    print(f"Could not find brackets on page {page_num}, attempt {attempt + 1}.")
-            except Exception as e:
-                print(f"Error on page {page_num}, attempt {attempt + 1}: {e}")
-                time.sleep(2)
-                
-        if success and parsed_json:
-            current_state = parsed_json
-            # Save intermediate state to the server
-            page_file_path = os.path.join(temp_states_dir, f"resume_{process_uuid}_page_{page_num}.json")
-            current_file_path = os.path.join(temp_states_dir, f"resume_{process_uuid}_current.json")
+        # Print total token usage
+        if token_usage_tracker:
+            total_prompt = sum(u.get("prompt_tokens", 0) for u in token_usage_tracker)
+            total_completion = sum(u.get("completion_tokens", 0) for u in token_usage_tracker)
+            total_tokens = sum(u.get("total_tokens", 0) for u in token_usage_tracker)
+            print("\n=== TOTAL RESUME EXTRACTION TOKEN USAGE ===")
+            print(f"Total Prompt Tokens: {total_prompt}")
+            print(f"Total Completion Tokens: {total_completion}")
+            print(f"Total Tokens: {total_tokens}")
+            print("============================================\n")
             
+        if result:
+            # Save final state to file as requested by the server logic
+            final_file_path = os.path.join(temp_states_dir, f"resume_{process_uuid}_final.json")
             try:
-                with open(page_file_path, "w", encoding="utf-8") as f:
-                    json.dump(current_state, f, indent=4, ensure_ascii=False)
-                with open(current_file_path, "w", encoding="utf-8") as f:
-                    json.dump(current_state, f, indent=4, ensure_ascii=False)
-                print(f"Saved state for page {page_num} to {page_file_path}")
+                with open(final_file_path, "w", encoding="utf-8") as f:
+                    json.dump(result, f, indent=4, ensure_ascii=False)
+                print(f"Saved final state to {final_file_path}")
             except Exception as se:
-                print(f"Failed to save intermediate files: {se}")
+                print(f"Failed to save final state file: {se}")
+            return result
         else:
-            print(f"Warning: Failed to extract page {page_num} successfully. Continuing with existing state.")
+            print("Single call extraction failed. Falling back to chunked processing.")
 
+    # 2. Parallel Chunked Extraction for > 3 pages (or fallback if single call failed)
+    # Group pages into chunks of 2 pages
+    chunks = []
+    current_chunk_pages = []
+    current_chunk_text = []
+    
+    for page_num, text in non_empty_pages:
+        current_chunk_pages.append(page_num)
+        current_chunk_text.append(text)
+        if len(current_chunk_pages) == 2:
+            chunks.append((list(current_chunk_pages), "\n\n".join(current_chunk_text)))
+            current_chunk_pages = []
+            current_chunk_text = []
+            
+    if current_chunk_pages:
+        chunks.append((current_chunk_pages, "\n\n".join(current_chunk_text)))
+        
+    print(f"Divided into {len(chunks)} chunks for parallel processing.")
+    
+    def extract_chunk(chunk_idx, chunk_info):
+        pages_in_chunk, chunk_text = chunk_info
+        print(f"Starting extraction for chunk {chunk_idx + 1}/{len(chunks)} (pages {pages_in_chunk})...")
+        res = extract_resume_json(chunk_text, model=model, token_usage_tracker=token_usage_tracker)
+        if res:
+            # Save intermediate chunk state
+            chunk_file_path = os.path.join(temp_states_dir, f"resume_{process_uuid}_chunk_{chunk_idx + 1}.json")
+            try:
+                with open(chunk_file_path, "w", encoding="utf-8") as f:
+                    json.dump(res, f, indent=4, ensure_ascii=False)
+                print(f"Saved state for chunk {chunk_idx + 1} to {chunk_file_path}")
+            except Exception as se:
+                print(f"Failed to save chunk file: {se}")
+        return res
+
+    chunk_results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(4, len(chunks))) as executor:
+        # Submit all tasks
+        future_to_idx = {executor.submit(extract_chunk, idx, chunk): idx for idx, chunk in enumerate(chunks)}
+        
+        # Collect results ordered by chunk index
+        results_by_idx = {}
+        for future in concurrent.futures.as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            try:
+                results_by_idx[idx] = future.result()
+            except Exception as exc:
+                print(f"Chunk {idx + 1} generated an exception: {exc}")
+                results_by_idx[idx] = None
+                
+        for idx in range(len(chunks)):
+            res = results_by_idx.get(idx)
+            if res:
+                chunk_results.append(res)
+                
+    # Print total token usage
+    if token_usage_tracker:
+        total_prompt = sum(u.get("prompt_tokens", 0) for u in token_usage_tracker)
+        total_completion = sum(u.get("completion_tokens", 0) for u in token_usage_tracker)
+        total_tokens = sum(u.get("total_tokens", 0) for u in token_usage_tracker)
+        print("\n=== TOTAL RESUME EXTRACTION TOKEN USAGE ===")
+        print(f"Total Prompt Tokens: {total_prompt}")
+        print(f"Total Completion Tokens: {total_completion}")
+        print(f"Total Tokens: {total_tokens}")
+        print("============================================\n")
+        
+    if not chunk_results:
+        print("Error: All chunk extractions failed.")
+        return None
+        
+    print(f"Successfully extracted {len(chunk_results)}/{len(chunks)} chunks. Merging...")
+    merged_state = merge_resume_jsons(chunk_results)
+    
     # 3. Post-processing calculations & cleaning (done at the end)
-    if "Experience" in current_state and "experiences" in current_state["Experience"]:
-        calculated_years = calculate_total_experience(current_state["Experience"]["experiences"])
+    if "Experience" in merged_state and "experiences" in merged_state["Experience"]:
+        calculated_years = calculate_total_experience(merged_state["Experience"]["experiences"])
         if calculated_years > 0:
-            current_state["Experience"]["total_experience_years"] = calculated_years
+            merged_state["Experience"]["total_experience_years"] = calculated_years
 
     # Clean bullet points in Achievements and Experience
     def clean_text(text):
@@ -384,11 +497,11 @@ JSON SCHEMA:
             return re.sub(r'^[◆•\-*·\s]+', '', text).strip()
         return text
 
-    if "Achievements" in current_state and isinstance(current_state["Achievements"], list):
-        current_state["Achievements"] = [clean_text(a) for a in current_state["Achievements"] if clean_text(a)]
+    if "Achievements" in merged_state and isinstance(merged_state["Achievements"], list):
+        merged_state["Achievements"] = [clean_text(a) for a in merged_state["Achievements"] if clean_text(a)]
         
-    if "Experience" in current_state and isinstance(current_state["Experience"], dict) and "experiences" in current_state["Experience"]:
-        for exp in current_state["Experience"]["experiences"]:
+    if "Experience" in merged_state and isinstance(merged_state["Experience"], dict) and "experiences" in merged_state["Experience"]:
+        for exp in merged_state["Experience"]["experiences"]:
             if "projects" in exp and isinstance(exp["projects"], list):
                 for proj in exp["projects"]:
                     if "description" in proj and isinstance(proj["description"], list):
@@ -398,12 +511,12 @@ JSON SCHEMA:
     final_file_path = os.path.join(temp_states_dir, f"resume_{process_uuid}_final.json")
     try:
         with open(final_file_path, "w", encoding="utf-8") as f:
-            json.dump(current_state, f, indent=4, ensure_ascii=False)
+            json.dump(merged_state, f, indent=4, ensure_ascii=False)
         print(f"Saved final state to {final_file_path}")
     except Exception as se:
         print(f"Failed to save final state file: {se}")
 
-    return current_state
+    return merged_state
 
 # 3. MAIN RUNNER
 
