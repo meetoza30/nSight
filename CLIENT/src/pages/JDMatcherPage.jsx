@@ -20,17 +20,18 @@ function JDMatcherPage({ onMatchComplete }) {
   /* ---- JD FILE HANDLERS ---- */
   const handleJdFileSelect = (e) => {
     const f = e.target.files[0];
-    if (f && f.type === 'application/pdf') setJdFile(f);
-    else if (f) setError('JD PDF must be a PDF file.');
+    const isVal = f && (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf') || f.name.toLowerCase().endsWith('.docx') || f.name.toLowerCase().endsWith('.doc') || f.type.includes('word'));
+    if (isVal) setJdFile(f);
+    else if (f) setError('JD file must be a PDF or DOCX file.');
   };
 
   /* ---- RESUME FILE HANDLERS ---- */
   const addResumes = (files) => {
-    const pdfs = Array.from(files).filter(f => f.type === 'application/pdf');
-    if (pdfs.length !== files.length) setError('Only PDF files accepted. Non-PDFs were skipped.');
+    const validFiles = Array.from(files).filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf') || f.name.toLowerCase().endsWith('.docx') || f.name.toLowerCase().endsWith('.doc') || f.type.includes('word'));
+    if (validFiles.length !== files.length) setError('Only PDF and DOCX files accepted. Other formats were skipped.');
     setResumeFiles(prev => {
       const names = new Set(prev.map(f => f.name));
-      return [...prev, ...pdfs.filter(f => !names.has(f.name))];
+      return [...prev, ...validFiles.filter(f => !names.has(f.name))];
     });
   };
 
@@ -50,8 +51,8 @@ function JDMatcherPage({ onMatchComplete }) {
 
     // Validation
     if (jdMode === 'text' && !jdText.trim()) return setError('Please paste the Job Description text.');
-    if (jdMode === 'file' && !jdFile) return setError('Please upload a JD PDF file.');
-    if (resumeFiles.length === 0) return setError('Please upload at least one resume PDF.');
+    if (jdMode === 'file' && !jdFile) return setError('Please upload a JD PDF or DOCX file.');
+    if (resumeFiles.length === 0) return setError('Please upload at least one resume (PDF or DOCX).');
 
     const formData = new FormData();
     if (jdMode === 'text') {
@@ -207,7 +208,7 @@ function JDMatcherPage({ onMatchComplete }) {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
               </svg>
-              Upload PDF
+              Upload File
             </button>
           </div>
 
@@ -243,10 +244,10 @@ function JDMatcherPage({ onMatchComplete }) {
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
-                  Click to upload JD PDF
+                  Click to upload JD (PDF/DOCX)
                 </button>
               )}
-              <input ref={jdFileRef} type="file" name="jd_file" accept=".pdf" onChange={handleJdFileSelect} style={{ display: 'none' }} />
+              <input ref={jdFileRef} type="file" name="jd_file" accept=".pdf,.docx,.doc" onChange={handleJdFileSelect} style={{ display: 'none' }} />
             </div>
           )}
         </section>
@@ -272,13 +273,13 @@ function JDMatcherPage({ onMatchComplete }) {
               </svg>
             </div>
             <p className="jdm-dz-main"><span className="jdm-dz-highlight">Click to upload</span> or drag & drop</p>
-            <p className="jdm-dz-sub">Multiple PDF resumes supported</p>
+            <p className="jdm-dz-sub">Multiple PDF & DOCX resumes supported</p>
           </div>
           <input
             ref={resumeInputRef}
             type="file"
             name="resume_files"
-            accept=".pdf"
+            accept=".pdf,.docx,.doc"
             multiple
             onChange={e => addResumes(e.target.files)}
             style={{ display: 'none' }}

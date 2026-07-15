@@ -3,10 +3,10 @@ from services.resume_extraction import extract_text_preserving_layout, extract_r
 
 def process_resume_file(file_path: str) -> dict:
     """
-    Process a resume PDF file and return extracted data.
+    Process a resume PDF or DOCX file and return extracted data.
     
     Args:
-        file_path: Path to the uploaded resume PDF
+        file_path: Path to the uploaded resume PDF or DOCX
         
     Returns:
         dict: Extracted resume data
@@ -15,7 +15,7 @@ def process_resume_file(file_path: str) -> dict:
     # print("full_text",full_text)
     
     if not full_text:
-        raise HTTPException(status_code=400, detail="Empty or unreadable PDF")
+        raise HTTPException(status_code=400, detail="Empty or unreadable file")
         
     extracted_data = extract_resume_json(full_text)
     if not extracted_data:

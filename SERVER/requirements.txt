@@ -2,6 +2,7 @@ fastapi
 uvicorn
 python-multipart
 pdfplumber
+python-docx
 requests
 python-dateutil
 python-dotenv

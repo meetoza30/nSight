@@ -23,9 +23,9 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 @router.post("/extract-resume")
 async def extract_resume(request: Request, file: UploadFile = File(...)):
     """
-    Upload a resume PDF and extract structured data from it.
+    Upload a resume PDF or DOCX and extract structured data from it.
     
-    - **file**: Resume PDF file to process
+    - **file**: Resume PDF or DOCX file to process
     
     Returns:
         dict: Extracted resume data as JSON for the frontend to display/edit
@@ -33,10 +33,11 @@ async def extract_resume(request: Request, file: UploadFile = File(...)):
     # ── Rate limit check ─────────────────────────────────────────────
     rate_headers = check_rate_limit(request, cost=1)
 
-    if not file.filename.lower().endswith('.pdf'):
+    valid_exts = ('.pdf', '.docx', '.doc')
+    if not file.filename.lower().endswith(valid_exts):
         raise HTTPException(
             status_code=400, 
-            detail="Only PDF files are accepted. Please upload a PDF resume."
+            detail="Only PDF and DOCX files are accepted. Please upload a valid resume."
         )
     
     temp_dir = tempfile.mkdtemp()
@@ -137,9 +138,9 @@ async def match_bulk_resumes(
     Bulk match resumes against a single Job Description.
 
     JD input (provide exactly one):
-      - jd_file: The JD as a PDF file upload
+      - jd_file: The JD as a PDF or DOCX file upload
       - jd_text: The JD as a plain-text form field
-      - resume_files: One or more candidate resume PDFs.
+      - resume_files: One or more candidate resume PDFs or DOCX files.
 
     Response:
       - results[]: per-candidate { filename, overall_score, grade, summary }
@@ -151,27 +152,28 @@ async def match_bulk_resumes(
     if not resume_files or len(resume_files) == 0:
         raise HTTPException(status_code=400, detail="At least one resume file must be uploaded.")
 
+    valid_exts = ('.pdf', '.docx', '.doc')
     for rf in resume_files:
-        if not rf.filename.lower().endswith(".pdf"):
+        if not rf.filename.lower().endswith(valid_exts):
             raise HTTPException(
                 status_code=400,
-                detail=f"Only PDF files are accepted. Invalid file: {rf.filename}"
+                detail=f"Only PDF and DOCX files are accepted. Invalid file: {rf.filename}"
             )
 
-    if jd_file and not jd_file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files are accepted for jd_file.")
+    if jd_file and not jd_file.filename.lower().endswith(valid_exts):
+        raise HTTPException(status_code=400, detail="Only PDF and DOCX files are accepted for jd_file.")
 
     temp_dir = tempfile.mkdtemp()
 
     try:
         if jd_file:
-            print(f"Extracting text from JD PDF: {jd_file.filename}")
+            print(f"Extracting text from JD file: {jd_file.filename}")
             jd_temp_path = os.path.join(temp_dir, jd_file.filename)
             with open(jd_temp_path, "wb") as buffer:
                 buffer.write(await jd_file.read())
             parsed_jd_text = extract_text_preserving_layout(jd_temp_path)
             if not parsed_jd_text:
-                raise HTTPException(status_code=400, detail="Failed to read text from uploaded JD PDF.")
+                raise HTTPException(status_code=400, detail="Failed to read text from uploaded JD file.")
         else:
             parsed_jd_text = (jd_text or "").strip()
             if not parsed_jd_text:

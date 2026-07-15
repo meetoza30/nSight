@@ -8,11 +8,11 @@ function UploadPage({ onFileUpload, uploadedFile }) {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFile = (file) => {
-    if (file && file.type === 'application/pdf') {
+    if (file && (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf') || file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc') || file.type.includes('word'))) {
       onFileUpload(file);
       navigate('/processing');
     } else if (file) {
-      alert('Please select a PDF file');
+      alert('Please select a PDF or DOCX file');
     }
   };
 
@@ -57,13 +57,13 @@ function UploadPage({ onFileUpload, uploadedFile }) {
         <p className="zone-text-main">
           <span className="upload-highlight">Click to upload</span> or drag and drop
         </p>
-        <p className="zone-text-sub">PDF files only (max 5MB)</p>
+        <p className="zone-text-sub">PDF or DOCX files (max 5MB)</p>
       </div>
 
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf"
+        accept=".pdf,.docx,.doc"
         onChange={handleFileSelect}
         style={{ display: 'none' }}
       />
