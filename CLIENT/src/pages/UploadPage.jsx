@@ -1,14 +1,27 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UploadPage.css';
 
-function UploadPage({ onFileUpload, uploadedFile }) {
+function UploadPage({ onFileUpload, uploadedFile, onReset }) {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  useEffect(() => {
+    try {
+      localStorage.removeItem('nsight_extracted_data');
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
   const handleFile = (file) => {
     if (file && (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf') || file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc') || file.type.includes('word'))) {
+      try {
+        localStorage.removeItem('nsight_extracted_data');
+      } catch (e) {
+        console.error(e);
+      }
       onFileUpload(file);
       navigate('/processing');
     } else if (file) {

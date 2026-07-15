@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
@@ -10,10 +10,13 @@ import JDResultsPage from './pages/JDResultsPage';
 import logo from './icon/ncircle_tech_logo.jpg';
 import './App.css';
 
-function AppHeader() {
+function AppHeader({ onReset }) {
   const navigate = useNavigate();
   return (
-    <header className="app-header" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
+    <header className="app-header" style={{ cursor: 'pointer' }} onClick={() => {
+      if (onReset) onReset();
+      navigate('/');
+    }}>
       <img src={logo} alt="nCircle Logo" className="app-logo-small" />
       <h1 className="app-title">
         nSight
@@ -26,8 +29,38 @@ function AppHeader() {
 function App() {
   // Resume parser state
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [extractedData, setExtractedData] = useState(null);
+  const [extractedData, setExtractedData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nsight_extracted_data');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [processedData, setProcessedData] = useState(null);
+
+  useEffect(() => {
+    try {
+      if (extractedData) {
+        localStorage.setItem('nsight_extracted_data', JSON.stringify(extractedData));
+      } else {
+        localStorage.removeItem('nsight_extracted_data');
+      }
+    } catch (e) {
+      console.error('Failed to sync to localStorage', e);
+    }
+  }, [extractedData]);
+
+  const resetResumeFlow = () => {
+    setUploadedFile(null);
+    setExtractedData(null);
+    setProcessedData(null);
+    try {
+      localStorage.removeItem('nsight_extracted_data');
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // JD Matcher state
   const [matchData, setMatchData] = useState(null);
@@ -39,12 +72,16 @@ function App() {
       <div className="app">
         <img src={logo} alt="" className="watermark-bg" />
 
-        <AppHeader />
+        <AppHeader onReset={resetResumeFlow} />
 
         <main className="main-container">
           <Routes>
             {/* ---- Home ---- */}
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<UploadPage
+                  onFileUpload={setUploadedFile}
+                  uploadedFile={uploadedFile}
+                  onReset={resetResumeFlow}
+                />} />
 
             {/* ---- Resume Parser flow ---- */}
             <Route
@@ -53,6 +90,7 @@ function App() {
                 <UploadPage
                   onFileUpload={setUploadedFile}
                   uploadedFile={uploadedFile}
+                  onReset={resetResumeFlow}
                 />
               }
             />
@@ -65,7 +103,7 @@ function App() {
                     onExtractComplete={setExtractedData}
                   />
                 ) : (
-                  <Navigate to="/upload" replace />
+                  <Navigate to="/" replace />
                 )
               }
             />
@@ -76,9 +114,10 @@ function App() {
                   <ReviewPage
                     extractedData={extractedData}
                     onGenerateComplete={setProcessedData}
+                    onDataChange={setExtractedData}
                   />
                 ) : (
-                  <Navigate to="/upload" replace />
+                  <Navigate to="/" replace />
                 )
               }
             />
@@ -86,9 +125,9 @@ function App() {
               path="/download"
               element={
                 processedData ? (
-                  <DownloadPage data={processedData} />
+                  <DownloadPage data={processedData} onReset={resetResumeFlow} />
                 ) : (
-                  <Navigate to="/upload" replace />
+                  <Navigate to="/" replace />
                 )
               }
             />

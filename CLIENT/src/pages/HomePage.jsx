@@ -40,7 +40,7 @@ function HomePage() {
         </div>
 
         {/* Feature 2: JD Score Matcher */}
-        <div className="feature-card glass-card" onClick={() => navigate('/jd-matcher')} id="feature-jd-matcher">
+        {/* <div className="feature-card glass-card" onClick={() => navigate('/jd-matcher')} id="feature-jd-matcher">
           <div className="feature-icon-wrap feature-icon-purple">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
@@ -51,11 +51,11 @@ function HomePage() {
           </div>
           <div className="feature-content">
             <h3 className="feature-title">Resume analyzer</h3>
-            {/* <div className="feature-tags">
+            <div className="feature-tags">
               <span className="tag tag--purple">Bulk Upload</span>
               <span className="tag tag--purple">AI Scoring</span>
               <span className="tag tag--purple">PDF Report</span>
-            </div> */}
+            </div>
           </div>
           <div className="feature-cta feature-cta--purple">
             <span>Start Matching</span>
@@ -63,7 +63,7 @@ function HomePage() {
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

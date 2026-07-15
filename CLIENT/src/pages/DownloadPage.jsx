@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DownloadPage.css';
 
-function DownloadPage({ data }) {
+function DownloadPage({ data, onReset }) {
   const navigate = useNavigate();
   const [downloadUrl, setDownloadUrl] = useState(null);
 
@@ -29,7 +29,13 @@ function DownloadPage({ data }) {
   };
 
   const handleNewResume = () => {
-    navigate('/upload');
+    if (onReset) onReset();
+    try {
+      localStorage.removeItem('nsight_extracted_data');
+    } catch (e) {
+      console.error(e);
+    }
+    navigate('/');
   };
 
   return (

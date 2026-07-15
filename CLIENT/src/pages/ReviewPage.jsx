@@ -121,7 +121,7 @@ function SkillAutocomplete({ existingSkills, onAdd, placeholder = "+ Add skill" 
 }
 
 
-function ReviewPage({ extractedData, onGenerateComplete }) {
+function ReviewPage({ extractedData, onGenerateComplete, onDataChange }) {
   const navigate = useNavigate();
   const [data, setData] = useState(extractedData);
   const [openSections, setOpenSections] = useState({
@@ -132,6 +132,13 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
     education: false,
   });
   const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    if (data) {
+      localStorage.setItem('nsight_extracted_data', JSON.stringify(data));
+      if (onDataChange) onDataChange(data);
+    }
+  }, [data, onDataChange]);
 
   const toggleSection = (key) => setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
@@ -329,14 +336,13 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
         <div className="review-section">
           <div className="section-header" onClick={() => toggleSection('basic')}>
             <div className="section-header-left">
-              {/* <span className="section-icon">👤</span> */}
               <span className="section-title">Basic Details</span>
             </div>
             <span className={`section-toggle ${openSections.basic ? 'open' : ''}`}><ChevronDown /></span>
           </div>
           {openSections.basic && (
-            <div className="section-body">
-              <div className="form-row">
+            <div className="section-body basic-body">
+              <div className="basic-fields-grid">
                 <div className="form-group">
                   <label className="form-label">Full Name</label>
                   <input className="form-input" type="text" value={data.Name || ''} onChange={(e) => updateField('Name', e.target.value)} placeholder="Enter full name" />
@@ -354,20 +360,19 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
         <div className="review-section">
           <div className="section-header" onClick={() => toggleSection('experience')}>
             <div className="section-header-left">
-              {/* <span className="section-icon">💼</span> */}
               <span className="section-title">Experience</span>
             </div>
             <span className={`section-toggle ${openSections.experience ? 'open' : ''}`}><ChevronDown /></span>
           </div>
           {openSections.experience && (
-            <div className="section-body">
+            <div className="section-body experience-body">
               {(data.Experience?.experiences || []).map((exp, expIdx) => (
-                <div className="entry-block" key={expIdx}>
+                <div className="entry-block company-card" key={expIdx}>
                   <div className="entry-block-header">
                     <span className="entry-block-title">{exp.company || `Experience #${expIdx + 1}`}</span>
                     <button className="entry-remove-btn" onClick={() => removeExperience(expIdx)}>✕ Remove</button>
                   </div>
-                  <div className="form-row four-col">
+                  <div className="company-fields-grid">
                     <div className="form-group">
                       <label className="form-label">Company</label>
                       <input className="form-input" type="text" value={exp.company || ''} onChange={(e) => updateExperience(expIdx, 'company', e.target.value)} placeholder="Company name" />
@@ -386,56 +391,60 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
                     </div>
                   </div>
 
-                  {(exp.projects || []).map((proj, projIdx) => (
-                    <div className="project-block" key={projIdx}>
-                      <div className="project-block-header">
-                        <span className="project-block-title">{proj.project_name || `Project #${projIdx + 1}`}</span>
-                        {exp.projects.length > 1 && (
-                          <button className="entry-remove-btn" onClick={() => removeProject(expIdx, projIdx)}>✕</button>
-                        )}
+                  <div className="projects-container">
+                    {(exp.projects || []).map((proj, projIdx) => (
+                      <div className="project-block" key={projIdx}>
+                        <div className="project-block-header">
+                          <span className="project-block-title">{proj.project_name || `Project #${projIdx + 1}`}</span>
+                          {exp.projects.length > 1 && (
+                            <button className="entry-remove-btn" onClick={() => removeProject(expIdx, projIdx)}>✕</button>
+                          )}
+                        </div>
+                        <div className="project-top-grid">
+                          <div className="form-group">
+                            <label className="form-label">Client</label>
+                            <input className="form-input" type="text" value={proj.client || ''} onChange={(e) => updateProject(expIdx, projIdx, 'client', e.target.value)} placeholder="Client name" />
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Project Name</label>
+                            <input className="form-input" type="text" value={proj.project_name || ''} onChange={(e) => updateProject(expIdx, projIdx, 'project_name', e.target.value)} placeholder="Project name" />
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Project Span</label>
+                            <input className="form-input" type="text" value={proj.project_span || ''} onChange={(e) => updateProject(expIdx, projIdx, 'project_span', e.target.value)} placeholder="e.g. 6 months" />
+                          </div>
+                        </div>
+                        <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                          <label className="form-label">Technologies</label>
+                          <div className="project-tech-tags">
+                            {(proj.technologies || []).map((tech, tIdx) => (
+                              <span className="tech-tag" key={tIdx}>
+                                {tech}
+                                <button className="tech-remove" onClick={() => removeTech(expIdx, projIdx, tIdx)}>✕</button>
+                              </span>
+                            ))}
+                            <input className="tech-add-input" style={{width: '200px'}} type="text" placeholder="+ Add tech and press Enter" onKeyDown={(e) => handleTagKeyDown(e, (val) => addTech(expIdx, projIdx, val))} />
+                          </div>
+                        </div>
+                        <div className="project-desc-grid">
+                          <div className="form-group">
+                            <label className="form-label">Description</label>
+                            <textarea className="form-textarea" value={proj.description || ''} onChange={(e) => updateProject(expIdx, projIdx, 'description', e.target.value)} placeholder="Describe the project..." />
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Role / Responsibility</label>
+                            <textarea className="form-textarea" value={proj.role_responsibility || ''} onChange={(e) => updateProject(expIdx, projIdx, 'role_responsibility', e.target.value)} placeholder="Your role..." />
+                          </div>
+                        </div>
                       </div>
-                      <div className="form-row three-col">
-                        <div className="form-group">
-                          <label className="form-label">Client</label>
-                          <input className="form-input" type="text" value={proj.client || ''} onChange={(e) => updateProject(expIdx, projIdx, 'client', e.target.value)} placeholder="Client name" />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">Project Name</label>
-                          <input className="form-input" type="text" value={proj.project_name || ''} onChange={(e) => updateProject(expIdx, projIdx, 'project_name', e.target.value)} placeholder="Project name" />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">Project Span</label>
-                          <input className="form-input" type="text" value={proj.project_span || ''} onChange={(e) => updateProject(expIdx, projIdx, 'project_span', e.target.value)} placeholder="e.g. 6 months" />
-                        </div>
-                      </div>
-                      <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-                        <label className="form-label">Technologies</label>
-                        <div className="project-tech-tags">
-                          {(proj.technologies || []).map((tech, tIdx) => (
-                            <span className="tech-tag" key={tIdx}>
-                              {tech}
-                              <button className="tech-remove" onClick={() => removeTech(expIdx, projIdx, tIdx)}>✕</button>
-                            </span>
-                          ))}
-                          <input className="tech-add-input" style={{width: '200px'}} type="text" placeholder="+ Add tech and press Enter" onKeyDown={(e) => handleTagKeyDown(e, (val) => addTech(expIdx, projIdx, val))} />
-                        </div>
-                      </div>
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label className="form-label">Description</label>
-                          <textarea className="form-textarea" value={proj.description || ''} onChange={(e) => updateProject(expIdx, projIdx, 'description', e.target.value)} placeholder="Describe the project..." />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">Role / Responsibility</label>
-                          <textarea className="form-textarea" value={proj.role_responsibility || ''} onChange={(e) => updateProject(expIdx, projIdx, 'role_responsibility', e.target.value)} placeholder="Your role..." />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <button className="add-item-btn" onClick={() => addProject(expIdx)}>＋ Add Project</button>
+                    ))}
+                    <button className="add-item-btn" onClick={() => addProject(expIdx)}>＋ Add Project</button>
+                  </div>
                 </div>
               ))}
-              <button className="add-item-btn" onClick={addExperience}>＋ Add Experience</button>
+              <div className="section-footer-actions">
+                <button className="add-item-btn primary-add-btn" onClick={addExperience}>＋ Add Experience</button>
+              </div>
             </div>
           )}
         </div>
@@ -444,22 +453,21 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
         <div className="review-section">
           <div className="section-header" onClick={() => toggleSection('education')}>
             <div className="section-header-left">
-              {/* <span className="section-icon">🎓</span> */}
               <span className="section-title">Education</span>
             </div>
             <span className={`section-toggle ${openSections.education ? 'open' : ''}`}><ChevronDown /></span>
           </div>
           {openSections.education && (
-            <div className="section-body">
+            <div className="section-body education-body">
               {(data.Education || []).map((edu, idx) => (
-                <div className="entry-block" key={idx}>
+                <div className="entry-block education-card" key={idx}>
                   <div className="entry-block-header">
                     <span className="entry-block-title">Institution #{idx + 1}</span>
                     {data.Education.length > 1 && (
                       <button className="entry-remove-btn" onClick={() => removeEducation(idx)}>✕ Remove</button>
                     )}
                   </div>
-                  <div className="form-row four-col">
+                  <div className="education-fields-grid">
                     <div className="form-group">
                       <label className="form-label">College</label>
                       <input className="form-input" type="text" value={edu.college || ''} onChange={(e) => updateEducation(idx, 'college', e.target.value)} placeholder="Institution name" />
@@ -479,7 +487,9 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
                   </div>
                 </div>
               ))}
-              <button className="add-item-btn" onClick={addEducation}>＋ Add Education</button>
+              <div className="section-footer-actions">
+                <button className="add-item-btn primary-add-btn" onClick={addEducation}>＋ Add Education</button>
+              </div>
             </div>
           )}
         </div>
@@ -488,15 +498,14 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
         <div className="review-section">
           <div className="section-header" onClick={() => toggleSection('skills')}>
             <div className="section-header-left">
-              {/* <span className="section-icon">💡</span> */}
               <span className="section-title">Skills</span>
             </div>
             <span className={`section-toggle ${openSections.skills ? 'open' : ''}`}><ChevronDown /></span>
           </div>
           {openSections.skills && (
-            <div className="section-body">
+            <div className="section-body skills-body">
               {Object.entries(data.Skills || {}).map(([category, skills]) => (
-                <div className="skills-category" key={category}>
+                <div className="skills-category-card" key={category}>
                   <div className="skills-category-header">
                     <span className="skills-category-name">{category}</span>
                   </div>
@@ -507,7 +516,7 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
                         <button className="skill-remove" onClick={() => removeSkill(category, sIdx)}>✕</button>
                       </span>
                     ))}
-                    <div style={{ width: '200px' }}>
+                    <div style={{ width: '100%', minWidth: '160px', marginTop: '6px' }}>
                       <SkillAutocomplete
                         existingSkills={allExistingSkills}
                         onAdd={(val) => addSkill(category, val)}
@@ -516,15 +525,6 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
                   </div>
                 </div>
               ))}
-              <button
-                className="add-category-btn"
-                onClick={() => {
-                  const name = prompt('Enter new skill category name:');
-                  if (name) addSkillCategory(name);
-                }}
-              >
-                ＋ Add Category
-              </button>
             </div>
           )}
         </div>
@@ -533,14 +533,13 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
         <div className="review-section">
           <div className="section-header" onClick={() => toggleSection('achievements')}>
             <div className="section-header-left">
-              {/* <span className="section-icon">🏆</span> */}
               <span className="section-title">Achievements</span>
             </div>
             <span className={`section-toggle ${openSections.achievements ? 'open' : ''}`}><ChevronDown /></span>
           </div>
           {openSections.achievements && (
-            <div className="section-body">
-              <div className="achievements-compact">
+            <div className="section-body achievements-body">
+              <div className="achievements-grid">
                 {(data.Achievements || []).map((ach, idx) => (
                   <div className="achievement-item" key={idx}>
                     <span className="achievement-number">{idx + 1}</span>
@@ -549,7 +548,9 @@ function ReviewPage({ extractedData, onGenerateComplete }) {
                   </div>
                 ))}
               </div>
-              <button className="add-item-btn" onClick={addAchievement}>＋ Add Achievement</button>
+              <div className="section-footer-actions">
+                <button className="add-item-btn primary-add-btn" onClick={addAchievement}>＋ Add Achievement</button>
+              </div>
             </div>
           )}
         </div>
