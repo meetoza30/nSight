@@ -77,7 +77,7 @@ function App() {
         <main className="main-container">
           <Routes>
             {/* ---- Home ---- */}
-            <Route path="/" element={<UploadPage
+            <Route path="/" element={<HomePage
                   onFileUpload={setUploadedFile}
                   uploadedFile={uploadedFile}
                   onReset={resetResumeFlow}
